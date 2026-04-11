@@ -1,6 +1,6 @@
 /**
  * Authentication Module for OB - لأهل العبور
- * Fixed Supabase OAuth Implementation (Google + Facebook)
+ * FIXED Supabase Auth (OAuth + Session + Ads Protection)
  */
 
 class AuthManager {
@@ -8,78 +8,73 @@ class AuthManager {
         this.supabaseUrl = SUPABASE_URL;
         this.supabaseKey = SUPABASE_ANON_KEY;
 
-        // Create Supabase client
+        // Supabase client
         this.supabase = window.supabase.createClient(
             this.supabaseUrl,
             this.supabaseKey
         );
 
-        this.handleSession();
+        this.currentUser = null;
+
+        this.init();
     }
 
     // ======================
-    // USER STATE
+    // INIT SESSION
     // ======================
 
-    getCurrentUser() {
-        try {
-            const userStr = localStorage.getItem('ob_user');
-            return userStr ? JSON.parse(userStr) : null;
-        } catch (e) {
-            return null;
-        }
-    }
-
-    isLoggedIn() {
-        return this.getCurrentUser() !== null;
-    }
-
-    setUser(user) {
-        localStorage.setItem('ob_user', JSON.stringify(user));
-    }
-
-    clearUser() {
-        localStorage.removeItem('ob_user');
-        localStorage.removeItem('ob_session');
-    }
-
-    // ======================
-    // SESSION HANDLING
-    // ======================
-
-    async handleSession() {
+    async init() {
         const { data } = await this.supabase.auth.getSession();
 
         if (data?.session) {
-            const user = data.session.user;
-
-            this.setUser({
-                id: user.id,
-                email: user.email,
-                name:
-                    user.user_metadata?.full_name ||
-                    user.user_metadata?.name ||
-                    "مستخدم",
-                picture:
-                    user.user_metadata?.avatar_url ||
-                    user.user_metadata?.picture,
-                provider: user.app_metadata?.provider,
-                created_at: user.created_at
-            });
+            this.setUser(data.session.user);
         }
     }
 
     // ======================
-    // LOGIN WITH GOOGLE
+    // USER HANDLING
     // ======================
 
-    async signInWithGoogle(redirectUrl = 'dashboard.html') {
-        const redirectTo = `${window.location.origin}/ob/auth-callback.html`;
+    setUser(user) {
+        this.currentUser = {
+            id: user.id,
+            email: user.email,
+            name:
+                user.user_metadata?.full_name ||
+                user.user_metadata?.name ||
+                "مستخدم",
+            picture:
+                user.user_metadata?.avatar_url ||
+                user.user_metadata?.picture,
+            provider: user.app_metadata?.provider,
+            created_at: user.created_at
+        };
 
+        localStorage.setItem('ob_user', JSON.stringify(this.currentUser));
+    }
+
+    getCurrentUser() {
+        return this.currentUser || JSON.parse(localStorage.getItem('ob_user'));
+    }
+
+    hasUser() {
+        return !!this.getCurrentUser();
+    }
+
+    clearUser() {
+        this.currentUser = null;
+        localStorage.removeItem('ob_user');
+    }
+
+    // ======================
+    // LOGIN GOOGLE
+    // ======================
+
+    async signInWithGoogle() {
         const { error } = await this.supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo
+                redirectTo: `${window.location.origin}/ob/auth-callback.html`
             }
         });
 
@@ -90,16 +85,14 @@ class AuthManager {
     }
 
     // ======================
-    // LOGIN WITH FACEBOOK
+    // LOGIN FACEBOOK
     // ======================
 
-    async signInWithFacebook(redirectUrl = 'dashboard.html') {
-        const redirectTo = `${window.location.origin}/ob/auth-callback.html`;
-
+    async signInWithFacebook() {
         const { error } = await this.supabase.auth.signInWithOAuth({
             provider: 'facebook',
             options: {
-                redirectTo
+                redirectTo: `${window.location.origin}/ob/auth-callback.html`
             }
         });
 
@@ -110,35 +103,22 @@ class AuthManager {
     }
 
     // ======================
-    // CALLBACK PAGE HANDLING
+    // CALLBACK HANDLER
     // ======================
 
     async handleOAuthCallback() {
         const { data, error } = await this.supabase.auth.getSession();
 
         if (error) {
-            console.error("OAuth Error:", error);
+            console.error(error);
             return;
         }
 
         if (data?.session) {
-            const user = data.session.user;
-
-            this.setUser({
-                id: user.id,
-                email: user.email,
-                name:
-                    user.user_metadata?.full_name ||
-                    user.user_metadata?.name ||
-                    "مستخدم",
-                picture:
-                    user.user_metadata?.avatar_url ||
-                    user.user_metadata?.picture,
-                provider: user.app_metadata?.provider,
-                created_at: user.created_at
-            });
-
+            this.setUser(data.session.user);
             window.location.href = "dashboard.html";
+        } else {
+            window.location.href = "login.html";
         }
     }
 
@@ -157,7 +137,7 @@ class AuthManager {
     }
 
     // ======================
-    // USER ADS
+    // ADS FUNCTIONS
     // ======================
 
     async getUserAds(userId) {
@@ -229,4 +209,4 @@ class AuthManager {
 const Auth = new AuthManager();
 window.Auth = Auth;
 
-console.log('Auth module loaded - Supabase OAuth FIXED');
+console.log('Auth module FIXED & READY');
