@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم OB - الإدارة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        :root {
+            --admin-primary: #2563eb;
+            --admin-secondary: #1d4ed8;
+            --admin-success: #10b981;
+            --admin-warning: #f59e0b;
+            --admin-danger: #ef4444;
+            --admin-bg: #f8fafc;
+            --admin-sidebar: #1e293b;
+            --admin-card: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--admin-bg);
+            min-height: 100vh;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .admin-sidebar {
+            width: 280px;
+            background: var(--admin-sidebar);
+            color: white;
+            padding: 24px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .admin-sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 24px;
+            margin-bottom: 32px;
+        }
+
+        .admin-sidebar-logo svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .admin-sidebar-logo span {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .admin-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 24px;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .admin-nav-item:hover,
+        .admin-nav-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .admin-nav-item.active {
+            border-right: 3px solid var(--admin-primary);
+        }
+
+        .admin-nav-item svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .admin-nav-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 16px 24px;
+        }
+
+        /* Main Content */
+        .admin-main {
+            flex: 1;
+            margin-right: 280px;
+            padding: 24px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            background: var(--admin-card);
+            padding: 20px 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-header h1 {
+            font-size: 24px;
+            color: #1e293b;
+        }
+
+        .admin-header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .admin-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .admin-btn-primary {
+            background: var(--admin-primary);
+            color: white;
+        }
+
+        .admin-btn-primary:hover {
+            background: var(--admin-secondary);
+        }
+
+        .admin-btn-outline {
+            background: transparent;
+            border: 2px solid #e5e7eb;
+            color: #374151;
+        }
+
+        .admin-btn-outline:hover {
+            border-color: var(--admin-primary);
+            color: var(--admin-primary);
+        }
+
+        .admin-btn-danger {
+            background: var(--admin-danger);
+            color: white;
+        }
+
+        /* Stats Grid */
+        .admin-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .admin-stat-card {
+            background: var(--admin-card);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .admin-stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-stat-icon.blue { background: #dbeafe; color: #2563eb; }
+        .admin-stat-icon.green { background: #d1fae5; color: #10b981; }
+        .admin-stat-icon.orange { background: #fef3c7; color: #f59e0b; }
+        .admin-stat-icon.red { background: #fee2e2; color: #ef4444; }
+        .admin-stat-icon.purple { background: #ede9fe; color: #8b5cf6; }
+
+        .admin-stat-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .admin-stat-trend {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+
+        .admin-stat-trend.up {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .admin-stat-trend.down {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .admin-stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .admin-stat-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* Content Sections */
+        .admin-section {
+            background: var(--admin-card);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .admin-section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        /* Table */
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 14px 16px;
+            text-align: right;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .admin-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        .admin-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .admin-table .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active { background: #d1fae5; color: #059669; }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-featured { background: #ede9fe; color: #7c3aed; }
+        .status-expired { background: #fee2e2; color: #dc2626; }
+
+        .admin-table .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .admin-table .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-view { background: #dbeafe; color: #2563eb; }
+        .action-edit { background: #f3f4f6; color: #374151; }
+        .action-delete { background: #fee2e2; color: #dc2626; }
+        .action-feature { background: #ede9fe; color: #7c3aed; }
+
+        /* SEO Section */
+        .seo-card {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .seo-card h3 {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .seo-form-group {
+            margin-bottom: 16px;
+        }
+
+        .seo-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .seo-form-group input,
+        .seo-form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .seo-form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .seo-form-group input:focus,
+        .seo-form-group textarea:focus {
+            outline: none;
+            border-color: var(--admin-primary);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            color: #64748b;
+        }
+
+        /* Tabs */
+        .admin-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 8px;
+        }
+
+        .admin-tab {
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.3s;
+        }
+
+        .admin-tab:hover {
+            color: var(--admin-primary);
+        }
+
+        .admin-tab.active {
+            color: var(--admin-primary);
+            background: #dbeafe;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .admin-sidebar {
+                width: 80px;
+                padding: 24px 0;
+            }
+
+            .admin-sidebar-logo span,
+            .admin-nav-item span {
+                display: none;
+            }
+
+            .admin-sidebar-logo {
+                justify-content: center;
+            }
+
+            .admin-nav-item {
+                justify-content: center;
+                padding: 14px;
+            }
+
+            .admin-main {
+                margin-right: 80px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-sidebar {
+                display: none;
+            }
+
+            .admin-main {
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-sidebar-logo">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                    <rect width="40" height="40" rx="10" fill="#2563EB"/>
+                    <path d="M12 20L18 14L24 20L18 26L12 20Z" fill="white"/>
+                    <path d="M20 14L26 20L20 26L14 20L20 14Z" fill="white" fill-opacity="0.7"/>
+                </svg>
+                <span>OB Admin</span>
+            </div>
+
+            <nav>
+                <a class="admin-nav-item active" data-section="overview">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>نظرة عامة</span>
+                </a>
+                <a class="admin-nav-item" data-section="ads">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                        <line x1="9" y1="21" x2="9" y2="9"></line>
+                    </svg>
+                    <span>الإعلانات</span>
+                </a>
+                <a class="admin-nav-item" data-section="users">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>الأعضاء</span>
+                </a>
+                <a class="admin-nav-item" data-section="categories">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>الأقسام</span>
+                </a>
+                <div class="admin-nav-divider"></div>
+                <a class="admin-nav-item" data-section="seo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span>إعدادات SEO</span>
+                </a>
+                <a class="admin-nav-item" data-section="settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    <span>الإعدادات</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <header class="admin-header">
+                <h1 id="pageTitle">نظرة عامة</h1>
+                <div class="admin-header-actions">
+                    <button class="admin-btn admin-btn-outline" onclick="exportData()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        تصدير البيانات
+                    </button>
+                    <button class="admin-btn admin-btn-primary" onclick="window.location.href='../index.html'">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                        العودة للموقع
+                    </button>
+                </div>
+            </header>
+
+            <!-- Stats Section -->
+            <div class="admin-stats-grid" id="statsSection">
+                <div class="admin-stat-card">
+                    <div class="admin-stat-header">
+                        <div class="admin-stat-icon blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                        <span class="admin-stat-trend up" id="usersTrend">+12%</span>
+                    </div>
+                    <div class="admin-stat-value" id="totalUsers">0</div>
+                    <div class="admin-stat-label">الأعضاء المسجلين</div>
+                </div>
+
+                <div class="admin-stat-card">
+                    <div class="admin-stat-header">
+                        <div class="admin-stat-icon green">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="3" y1="9" x2="21" y2="9"></line>
+                                <line x1="9" y1="21" x2="9" y2="9"></line>
+                            </svg>
+                        </div>
+                        <span class="admin-stat-trend up" id="adsTrend">+8%</span>
+                    </div>
+                    <div class="admin-stat-value" id="totalAds">0</div>
+                    <div class="admin-stat-label">إجمالي الإعلانات</div>
+                </div>
+
+                <div class="admin-stat-card">
+                    <div class="admin-stat-header">
+                        <div class="admin-stat-icon orange">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="admin-stat-value" id="activeAds">0</div>
+                    <div class="admin-stat-label">إعلانات نشطة</div>
+                </div>
+
+                <div class="admin-stat-card">
+                    <div class="admin-stat-header">
+                        <div class="admin-stat-icon purple">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="admin-stat-value" id="featuredAds">0</div>
+                    <div class="admin-stat-label">إعلانات مميزة</div>
+                </div>
+
+                <div class="admin-stat-card">
+                    <div class="admin-stat-header">
+                        <div class="admin-stat-icon orange">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="admin-stat-value" id="pendingAds">0</div>
+                    <div class="admin-stat-label">قيد الانتظار</div>
+                </div>
+
+                <div class="admin-stat-card">
+                    <div class="admin-stat-header">
+                        <div class="admin-stat-icon red">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="admin-stat-value" id="expiredAds">0</div>
+                    <div class="admin-stat-label">منتهية الصلاحية</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="admin-tabs" id="adminTabs">
+                <button class="admin-tab active" data-tab="all">الكل</button>
+                <button class="admin-tab" data-tab="active">نشطة</button>
+                <button class="admin-tab" data-tab="pending">قيد الانتظار</button>
+                <button class="admin-tab" data-tab="featured">مميزة</button>
+                <button class="admin-tab" data-tab="expired">منتهية</button>
+            </div>
+
+            <!-- Ads Table -->
+            <div class="admin-section" id="adsSection">
+                <div class="admin-section-header">
+                    <h2 class="admin-section-title">إدارة الإعلانات</h2>
+                    <div style="display: flex; gap: 12px;">
+                        <input type="text" id="searchAds" placeholder="بحث عن إعلان..." style="padding: 10px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: inherit;">
+                    </div>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>العنوان</th>
+                            <th>القسم</th>
+                            <th>السعر</th>
+                            <th>الناشر</th>
+                            <th>تاريخ النشر</th>
+                            <th>المشاهدات</th>
+                            <th>الحالة</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adsTableBody">
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 40px;">جاري التحميل...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- SEO Section -->
+            <div class="admin-section" id="seoSection" style="display: none;">
+                <div class="admin-section-header">
+                    <h2 class="admin-section-title">إعدادات SEO</h2>
+                </div>
+                <div class="seo-card">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        تحسين محركات البحث
+                    </h3>
+                    <div class="seo-form-group">
+                        <label>عنوان الموقع (Title)</label>
+                        <input type="text" id="seoTitle" value="OB - منصة بيع وشراء محلية في العبور">
+                    </div>
+                    <div class="seo-form-group">
+                        <label>وصف الموقع (Meta Description)</label>
+                        <textarea id="seoDescription">منصة محلية لبيع وشراء السلع والخدمات بين سكان مدينة العبور، تتيح للمستخدمين نشر الإعلانات بسهولة والتواصل المباشر عبر واتساب، مع تصفح منظم حسب الأقسام والمناطق لسرعة الوصول لأفضل العروض.</textarea>
+                    </div>
+                    <div class="seo-form-group">
+                        <label>الكلمات المفتاحية (Keywords)</label>
+                        <input type="text" id="seoKeywords" value="بيع, شراء, العبور, موبايلات, سيارات, عقارات, خدمات, إعلانات">
+                    </div>
+                    <div class="seo-form-group">
+                        <label>رابط الصورة (OG Image)</label>
+                        <input type="text" id="seoOgImage" value="/images/og-image.jpg">
+                    </div>
+                    <button class="admin-btn admin-btn-primary" onclick="saveSeoSettings()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        حفظ الإعدادات
+                    </button>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div class="admin-section" id="settingsSection" style="display: none;">
+                <div class="admin-section-header">
+                    <h2 class="admin-section-title">إعدادات الموقع</h2>
+                </div>
+                <div class="admin-form-group">
+                    <label>مدة عرض الإعلان (بالأيام)</label>
+                    <input type="number" id="adDuration" value="30" style="padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: inherit; width: 200px;">
+                </div>
+                <div class="admin-form-group">
+                    <label>سعر تمييز الإعلان (جنيه)</label>
+                    <input type="number" id="featuredPrice" value="25" style="padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: inherit; width: 200px;">
+                </div>
+                <div class="admin-form-group">
+                    <label>عدد أيام التنبيه قبل انتهاء الإعلان</label>
+                    <input type="number" id="alertDays" value="2" style="padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: inherit; width: 200px;">
+                </div>
+                <button class="admin-btn admin-btn-primary" onclick="saveSettings()">حفظ الإعدادات</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Ad Detail Modal -->
+    <div class="modal-overlay" id="adModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>تفاصيل الإعلان</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/supabase.js"></script>
+    <script>
+        // Check Admin Login
+        if (!sessionStorage.getItem('ob_admin')) {
+            window.location.href = 'login.html';
+        }
+
+        let allAds = [];
+        let currentTab = 'all';
+
+        // Load Data
+        async function loadDashboardData() {
+            try {
+                // Load all ads
+                const adsResponse = await fetch(`${SUPABASE_URL}/rest/v1/ads?select=*&order=created_at.desc`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                allAds = await adsResponse.json();
+
+                // Calculate stats
+                const today = new Date().toISOString().split('T')[0];
+                const stats = {
+                    totalAds: allAds.length,
+                    activeAds: allAds.filter(a => a.status === 'active' && a.expires_at >= today).length,
+                    featuredAds: allAds.filter(a => a.status === 'featured').length,
+                    pendingAds: allAds.filter(a => a.status === 'pending').length,
+                    expiredAds: allAds.filter(a => a.expires_at < today).length
+                };
+
+                document.getElementById('totalAds').textContent = stats.totalAds;
+                document.getElementById('activeAds').textContent = stats.activeAds;
+                document.getElementById('featuredAds').textContent = stats.featuredAds;
+                document.getElementById('pendingAds').textContent = stats.pendingAds;
+                document.getElementById('expiredAds').textContent = stats.expiredAds;
+
+                // Estimate users (unique user_ids)
+                const uniqueUsers = [...new Set(allAds.map(a => a.user_id).filter(Boolean))];
+                document.getElementById('totalUsers').textContent = uniqueUsers.length || 1;
+
+                renderAdsTable();
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        // Render Ads Table
+        function renderAdsTable() {
+            const tbody = document.getElementById('adsTableBody');
+            let filteredAds = allAds;
+
+            if (currentTab !== 'all') {
+                const today = new Date().toISOString().split('T')[0];
+                filteredAds = allAds.filter(ad => {
+                    if (currentTab === 'active') return ad.status === 'active' && ad.expires_at >= today;
+                    if (currentTab === 'pending') return ad.status === 'pending';
+                    if (currentTab === 'featured') return ad.status === 'featured';
+                    if (currentTab === 'expired') return ad.expires_at < today;
+                    return true;
+                });
+            }
+
+            if (filteredAds.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">لا توجد إعلانات</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filteredAds.map(ad => {
+                const categoryName = CATEGORIES.find(c => c.id === ad.category)?.name || ad.category;
+                const statusClass = ad.status === 'active' ? 'status-active' :
+                                   ad.status === 'pending' ? 'status-pending' :
+                                   ad.status === 'featured' ? 'status-featured' : 'status-expired';
+                const statusText = ad.status === 'active' ? 'نشط' :
+                                  ad.status === 'pending' ? 'قيد الانتظار' :
+                                  ad.status === 'featured' ? 'مميز' : 'منتهي';
+
+                return `
+                    <tr>
+                        <td>${ad.title}</td>
+                        <td>${categoryName}</td>
+                        <td>${new Intl.NumberFormat('ar-EG').format(ad.price)} ج.م</td>
+                        <td>${ad.user_id ? ad.user_id.substring(0, 8) : 'زائر'}</td>
+                        <td>${new Date(ad.created_at).toLocaleDateString('ar-EG')}</td>
+                        <td>${ad.views || 0}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td class="actions">
+                            <button class="action-btn action-view" onclick="viewAd('${ad.id}')">عرض</button>
+                            ${ad.status === 'pending' ? `<button class="action-btn action-feature" onclick="approveAd('${ad.id}')">قبول</button>` : ''}
+                            ${ad.status !== 'featured' ? `<button class="action-btn action-feature" onclick="featureAd('${ad.id}')">تمييز</button>` : ''}
+                            <button class="action-btn action-delete" onclick="deleteAd('${ad.id}')">حذف</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Tab switching
+        document.querySelectorAll('.admin-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentTab = tab.dataset.tab;
+                renderAdsTable();
+            });
+        });
+
+        // Navigation
+        document.querySelectorAll('.admin-nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.admin-nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                const section = item.dataset.section;
+                document.getElementById('pageTitle').textContent =
+                    section === 'overview' ? 'نظرة عامة' :
+                    section === 'ads' ? 'إدارة الإعلانات' :
+                    section === 'users' ? 'الأعضاء' :
+                    section === 'seo' ? 'إعدادات SEO' : 'الإعدادات';
+
+                document.getElementById('statsSection').style.display = section === 'overview' ? 'grid' : 'none';
+                document.getElementById('adminTabs').style.display = section === 'ads' ? 'flex' : 'none';
+                document.getElementById('adsSection').style.display = section === 'ads' || section === 'overview' ? 'block' : 'none';
+                document.getElementById('seoSection').style.display = section === 'seo' ? 'block' : 'none';
+                document.getElementById('settingsSection').style.display = section === 'settings' ? 'block' : 'none';
+            });
+        });
+
+        // View Ad
+        function viewAd(id) {
+            const ad = allAds.find(a => a.id === id);
+            if (!ad) return;
+
+            document.getElementById('modalContent').innerHTML = `
+                <div style="margin-bottom: 16px;">
+                    <strong>العنوان:</strong> ${ad.title}
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <strong>السعر:</strong> ${new Intl.NumberFormat('ar-EG').format(ad.price)} ج.م
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <strong>الوصف:</strong><br>${ad.description || 'لا يوجد وصف'}
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <strong>رقم الواتساب:</strong> ${ad.whatsapp || 'غير محدد'}
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <strong>المشاهدات:</strong> ${ad.views || 0}
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <strong>تاريخ الإنشاء:</strong> ${new Date(ad.created_at).toLocaleDateString('ar-EG')}
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <strong>تاريخ الانتهاء:</strong> ${new Date(ad.expires_at).toLocaleDateString('ar-EG')}
+                </div>
+            `;
+            document.getElementById('adModal').classList.add('show');
+        }
+
+        // Approve Ad
+        async function approveAd(id) {
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/ads?id=eq.${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    },
+                    body: JSON.stringify({ status: 'active' })
+                });
+                loadDashboardData();
+            } catch (error) {
+                console.error('Error approving ad:', error);
+            }
+        }
+
+        // Feature Ad
+        async function featureAd(id) {
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/ads?id=eq.${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    },
+                    body: JSON.stringify({ status: 'featured' })
+                });
+                loadDashboardData();
+            } catch (error) {
+                console.error('Error featuring ad:', error);
+            }
+        }
+
+        // Delete Ad
+        async function deleteAd(id) {
+            if (!confirm('هل أنت متأكد من حذف هذا الإعلان؟')) return;
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/ads?id=eq.${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                loadDashboardData();
+            } catch (error) {
+                console.error('Error deleting ad:', error);
+            }
+        }
+
+        // Save SEO Settings
+        function saveSeoSettings() {
+            const seoData = {
+                title: document.getElementById('seoTitle').value,
+                description: document.getElementById('seoDescription').value,
+                keywords: document.getElementById('seoKeywords').value,
+                ogImage: document.getElementById('seoOgImage').value
+            };
+            localStorage.setItem('ob_seo_settings', JSON.stringify(seoData));
+            alert('تم حفظ إعدادات SEO بنجاح!');
+        }
+
+        // Save Settings
+        function saveSettings() {
+            const settings = {
+                adDurationDays: parseInt(document.getElementById('adDuration').value),
+                featuredAdPrice: parseInt(document.getElementById('featuredPrice').value),
+                expiringAlertDays: parseInt(document.getElementById('alertDays').value)
+            };
+            localStorage.setItem('ob_settings', JSON.stringify(settings));
+            alert('تم حفظ الإعدادات بنجاح!');
+        }
+
+        // Export Data
+        function exportData() {
+            const data = {
+                ads: allAds,
+                exportDate: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ob-export-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+
+        // Close Modal
+        function closeModal() {
+            document.getElementById('adModal').classList.remove('show');
+        }
+
+        // Logout
+        function logout() {
+            sessionStorage.removeItem('ob_admin');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize
+        loadDashboardData();
+    </script>
+</body>
+</html>
