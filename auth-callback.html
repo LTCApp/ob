@@ -53,8 +53,8 @@
             color: #86EFAC;
         }
     </style>
-<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
 </head>
+
 <body>
     <div class="callback-container" id="callbackContainer">
         <div class="spinner"></div>
@@ -64,33 +64,26 @@
 
     <script src="js/config.js"></script>
     <script>
-        // OAuth Callback Handler - FIXED for Supabase OAuth
-        (async function() {
+        (async function () {
             const urlParams = new URLSearchParams(window.location.search);
             const hashParams = new URLSearchParams(window.location.hash.substring(1));
-            
+
             const code = urlParams.get('code');
             const error = urlParams.get('error');
             const errorDescription = urlParams.get('error_description');
-            
-            // Tokens from URL hash (Supabase returns tokens in hash after OAuth)
+
             const accessToken = hashParams.get('access_token');
             const refreshToken = hashParams.get('refresh_token');
             const expiresIn = hashParams.get('expires_in');
-            const tokenType = hashParams.get('token_type');
-            const providerToken = hashParams.get('provider_token');
-            const providerRefreshToken = hashParams.get('provider_refresh_token');
 
             const titleEl = document.getElementById('statusTitle');
             const textEl = document.getElementById('statusText');
-            const container = document.getElementById('callbackContainer');
 
             // Handle errors
             if (error) {
                 titleEl.textContent = 'حدث خطأ';
                 titleEl.classList.add('error');
                 textEl.textContent = errorDescription || error;
-                container.classList.add('error');
 
                 setTimeout(() => {
                     window.location.href = 'login.html?error=' + encodeURIComponent(error);
@@ -98,13 +91,11 @@
                 return;
             }
 
-            // Check if we have tokens in the URL hash
+            // Case 1: Token in URL hash (implicit flow)
             if (accessToken) {
                 try {
                     titleEl.textContent = 'جاري تسجيل الدخول...';
-                    textEl.textContent = 'يرجى الانتظار...';
 
-                    // Fetch user info using the access token
                     const userResponse = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
                         method: 'GET',
                         headers: {
@@ -113,177 +104,87 @@
                         }
                     });
 
-                    if (!userResponse.ok) {
-                        throw new Error('فشل في الحصول على بيانات المستخدم');
-                    }
-
                     const user = await userResponse.json();
 
-                    // Determine provider from user data
                     const provider = user.app_metadata?.provider || 'oauth';
 
-                    // Save user to localStorage
                     localStorage.setItem('ob_user', JSON.stringify({
                         id: user.id,
                         email: user.email,
-                        name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'مستخدم',
-                        picture: user.user_metadata?.avatar_url || user.user_metadata?.picture,
+                        name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0],
+                        picture: user.user_metadata?.avatar_url,
                         provider: provider,
                         created_at: user.created_at
                     }));
 
-                    // Save session
                     localStorage.setItem('ob_session', JSON.stringify({
                         access_token: accessToken,
                         refresh_token: refreshToken,
                         expires_at: Date.now() + (parseInt(expiresIn) * 1000)
                     }));
 
-                    // Save user to database
-                    try {
-                        await fetch(`${SUPABASE_URL}/rest/v1/users`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'apikey': SUPABASE_ANON_KEY,
-                                'Authorization': `Bearer ${accessToken}`,
-                                'Prefer': 'resolution=merge-duplicates'
-                            },
-                            body: JSON.stringify({
-                                id: user.id,
-                                email: user.email,
-                                name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'مستخدم',
-                                provider: provider,
-                                avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture,
-                                created_at: user.created_at
-                            })
-                        });
-                    } catch (e) {
-                        console.log('User save error (may already exist):', e);
-                    }
-
-                    // Success!
                     titleEl.textContent = 'تم تسجيل الدخول بنجاح!';
                     titleEl.classList.add('success');
                     textEl.textContent = 'جاري التحويل...';
-
-                    // Clean URL
-                    window.history.replaceState({}, document.title, window.location.pathname);
 
                     setTimeout(() => {
                         window.location.href = 'dashboard.html';
                     }, 500);
 
-                } catch (error) {
-                    console.error('Auth callback error:', error);
-                    titleEl.textContent = 'حدث خطأ';
-                    titleEl.classList.add('error');
-                    textEl.textContent = 'يرجى المحاولة مرة أخرى';
-
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 3000);
+                } catch (e) {
+                    console.error(e);
+                    window.location.href = 'login.html';
                 }
-            } else if (code) {
-                // If we have an authorization code, exchange it for tokens
+            }
+
+            // Case 2: PKCE code flow (FIXED)
+            else if (code) {
                 try {
                     titleEl.textContent = 'جاري تسجيل الدخول...';
-                    textEl.textContent = 'يرجى الانتظار...';
 
-                    // Exchange code for session
-                    const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=pkce`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'apikey': SUPABASE_ANON_KEY
-                        },
-                        body: JSON.stringify({
-                            code: code,
-                            redirect_to: window.location.origin + '/ob/auth-callback.html'
-                        })
-                    });
+                    // ✅ FIX: Let Supabase handle session automatically
+                    const { data, error: sessionError } = await supabase.auth.getSession();
 
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        console.error('Token exchange error:', errorData);
-                        throw new Error('فشل في تبادل الكود');
+                    if (sessionError || !data?.session) {
+                        throw new Error('فشل تسجيل الدخول');
                     }
 
-                    const session = await response.json();
-
-                    // Save user to localStorage
+                    const session = data.session;
                     const user = session.user;
                     const provider = user.app_metadata?.provider || 'oauth';
 
                     localStorage.setItem('ob_user', JSON.stringify({
                         id: user.id,
                         email: user.email,
-                        name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'مستخدم',
-                        picture: user.user_metadata?.avatar_url || user.user_metadata?.picture,
+                        name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0],
+                        picture: user.user_metadata?.avatar_url,
                         provider: provider,
                         created_at: user.created_at
                     }));
 
-                    // Save session
                     localStorage.setItem('ob_session', JSON.stringify({
                         access_token: session.access_token,
                         refresh_token: session.refresh_token,
                         expires_at: Date.now() + (session.expires_in * 1000)
                     }));
 
-                    // Save user to database
-                    try {
-                        await fetch(`${SUPABASE_URL}/rest/v1/users`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'apikey': SUPABASE_ANON_KEY,
-                                'Authorization': `Bearer ${session.access_token}`,
-                                'Prefer': 'resolution=merge-duplicates'
-                            },
-                            body: JSON.stringify({
-                                id: user.id,
-                                email: user.email,
-                                name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'مستخدم',
-                                provider: provider,
-                                avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture,
-                                created_at: user.created_at
-                            })
-                        });
-                    } catch (e) {
-                        console.log('User save error (may already exist):', e);
-                    }
-
-                    // Success!
                     titleEl.textContent = 'تم تسجيل الدخول بنجاح!';
                     titleEl.classList.add('success');
                     textEl.textContent = 'جاري التحويل...';
-
-                    // Clean URL
-                    window.history.replaceState({}, document.title, window.location.pathname);
 
                     setTimeout(() => {
                         window.location.href = 'dashboard.html';
                     }, 500);
 
-                } catch (error) {
-                    console.error('Code exchange error:', error);
-                    titleEl.textContent = 'حدث خطأ';
-                    titleEl.classList.add('error');
-                    textEl.textContent = 'يرجى المحاولة مرة أخرى';
-
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 3000);
-                }
-            } else {
-                // No tokens or code, redirect to login
-                titleEl.textContent = 'لا توجد بيانات';
-                textEl.textContent = 'جاري التحويل لصفحة الدخول...';
-
-                setTimeout(() => {
+                } catch (e) {
+                    console.error('Auth error:', e);
                     window.location.href = 'login.html';
-                }, 2000);
+                }
+            }
+
+            // No data
+            else {
+                window.location.href = 'login.html';
             }
         })();
     </script>
