@@ -7,11 +7,10 @@ class AuthManager {
     constructor() {
         this.supabaseUrl = SUPABASE_URL;
         this.supabaseKey = SUPABASE_ANON_KEY;
-        this.provider = null;
         this.accessToken = null;
     }
 
-    // Get current user from localStorage
+    // Get current user
     getCurrentUser() {
         try {
             const userStr = localStorage.getItem('ob_user');
@@ -22,130 +21,121 @@ class AuthManager {
         }
     }
 
-    // Check if user is logged in
+    // Check login
     isLoggedIn() {
         return this.getCurrentUser() !== null;
     }
 
-    // Store user data
+    // Save user
     setUser(user) {
-        try {
-            localStorage.setItem('ob_user', JSON.stringify(user));
-        } catch (e) {
-            console.error('Error saving user:', e);
-        }
+        localStorage.setItem('ob_user', JSON.stringify(user));
     }
 
-    // Store session token
-    setSession(accessToken, refreshToken, expiresIn) {
-        try {
-            localStorage.setItem('ob_session', JSON.stringify({
-                access_token: accessToken,
-                refresh_token: refreshToken,
-                expires_at: Date.now() + (expiresIn * 1000)
-            }));
-            this.accessToken = accessToken;
-        } catch (e) {
-            console.error('Error saving session:', e);
-        }
+    // Save session
+    setSession(session) {
+        if (!session) return;
+
+        localStorage.setItem('ob_session', JSON.stringify({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+            expires_at: Date.now() + (session.expires_in * 1000)
+        }));
+
+        this.accessToken = session.access_token;
     }
 
-    // Get session token
+    // Get session
     getSession() {
-        try {
-            const sessionStr = localStorage.getItem('ob_session');
-            if (!sessionStr) return null;
+        const sessionStr = localStorage.getItem('ob_session');
+        if (!sessionStr) return null;
 
-            const session = JSON.parse(sessionStr);
-            if (Date.now() > session.expires_at) {
-                // Session expired
-                this.clearUser();
-                return null;
-            }
-            return session;
-        } catch (e) {
+        const session = JSON.parse(sessionStr);
+        if (Date.now() > session.expires_at) {
+            this.clearUser();
             return null;
         }
+
+        return session;
     }
 
-    // Clear user data (logout)
+    // Logout
     clearUser() {
         localStorage.removeItem('ob_user');
         localStorage.removeItem('ob_session');
         this.accessToken = null;
     }
 
-    // Google OAuth Login/Register - FIXED
+    // ✅ Google Login (FIXED)
     async signInWithGoogle(redirectUrl) {
-        console.log('Google sign in initiated');
+        console.log('Google login via Supabase');
 
-        // Use full URL path to handle GitHub Pages subdirectory correctly
-        const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-        const redirectTo = `${window.location.origin}${basePath}auth-callback.html`;
-        const state = btoa(JSON.stringify({ redirect: redirectUrl || 'dashboard.html' }));
+        const redirectTo = `${window.location.origin}/auth-callback.html`;
 
-        // Use GET redirect method for Supabase OAuth
-        const authUrl = `${this.supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}&scopes=email%20profile`;
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: redirectUrl
+                    ? `${redirectTo}?redirect=${encodeURIComponent(redirectUrl)}`
+                    : redirectTo
+            }
+        });
 
-        // Redirect to Google OAuth
-        window.location.href = authUrl;
+        if (error) throw error;
     }
 
-    // Facebook OAuth Login/Register - FIXED
+    // ✅ Facebook Login (FIXED)
     async signInWithFacebook(redirectUrl) {
-        console.log('Facebook sign in initiated');
+        console.log('Facebook login via Supabase');
 
-        // Use full URL path to handle GitHub Pages subdirectory correctly
-        const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-        const redirectTo = `${window.location.origin}${basePath}auth-callback.html`;
-        const state = btoa(JSON.stringify({ redirect: redirectUrl || 'dashboard.html' }));
+        const redirectTo = `${window.location.origin}/auth-callback.html`;
 
-        // Use GET redirect method for Supabase OAuth
-        const authUrl = `${this.supabaseUrl}/auth/v1/authorize?provider=facebook&redirect_to=${encodeURIComponent(redirectTo)}&scopes=email%20public_profile`;
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'facebook',
+            options: {
+                redirectTo: redirectUrl
+                    ? `${redirectTo}?redirect=${encodeURIComponent(redirectUrl)}`
+                    : redirectTo
+            }
+        });
 
-        // Redirect to Facebook OAuth
-        window.location.href = authUrl;
+        if (error) throw error;
     }
 
-    // Save user to Supabase database
+    // Save user in DB
     async saveUserToDatabase(user, accessToken) {
         try {
             const userData = {
-                id: user.id || user.sub,
+                id: user.id,
                 email: user.email,
-                name: user.user_metadata?.full_name || user.user_metadata?.name || user.name || 'مستخدم',
-                provider: user.app_metadata?.provider || user.provider || 'google',
-                avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || user.picture,
+                name: user.user_metadata?.full_name || user.user_metadata?.name || 'مستخدم',
+                provider: user.app_metadata?.provider || 'google',
+                avatar_url: user.user_metadata?.avatar_url,
                 created_at: new Date().toISOString()
             };
 
-            const response = await fetch(`${this.supabaseUrl}/rest/v1/users`, {
+            await fetch(`${this.supabaseUrl}/rest/v1/users`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'apikey': this.supabaseKey,
-                    'Authorization': `Bearer ${accessToken || this.supabaseKey}`,
+                    'Authorization': `Bearer ${accessToken}`,
                     'Prefer': 'resolution=merge-duplicates'
                 },
                 body: JSON.stringify(userData)
             });
 
-            if (!response.ok) {
-                console.log('User may already exist');
-            }
-
             return true;
         } catch (error) {
-            console.error('Error saving user to database:', error);
+            console.error('DB save error:', error);
             return false;
         }
     }
 
-    // Sign out
+    // Logout
     async signOut() {
         try {
-            // Call Supabase sign out endpoint
             const session = this.getSession();
+
             if (session) {
                 await fetch(`${this.supabaseUrl}/auth/v1/logout`, {
                     method: 'POST',
@@ -156,131 +146,19 @@ class AuthManager {
                 });
             }
         } catch (error) {
-            console.error('Sign out error:', error);
-        } finally {
-            this.clearUser();
-            window.location.href = 'index.html';
+            console.error(error);
         }
+
+        this.clearUser();
+        window.location.href = 'index.html';
     }
 
-    // Get user ads from database
-    async getUserAds(userId) {
-        try {
-            const response = await fetch(
-                `${this.supabaseUrl}/rest/v1/ads?user_id=eq.${userId}&select=*&order=created_at.desc`,
-                {
-                    headers: {
-                        'apikey': this.supabaseKey,
-                        'Authorization': `Bearer ${this.supabaseKey}`
-                    }
-                }
-            );
-
-            if (!response.ok) throw new Error('فشل في تحميل الإعلانات');
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching user ads:', error);
-            return [];
-        }
-    }
-
-    // Get user stats
-    async getUserStats(userId) {
-        try {
-            const ads = await this.getUserAds(userId);
-            const today = new Date();
-
-            const stats = {
-                totalAds: ads.length,
-                activeAds: ads.filter(ad => new Date(ad.expires_at) >= today && ['active', 'featured'].includes(ad.status)).length,
-                featuredAds: ads.filter(ad => ad.status === 'featured').length,
-                totalViews: ads.reduce((sum, ad) => sum + (ad.views || 0), 0),
-                expiringSoon: ads.filter(ad => {
-                    const daysLeft = Math.ceil((new Date(ad.expires_at) - today) / (1000 * 60 * 60 * 24));
-                    return daysLeft > 0 && daysLeft <= APP_CONFIG.expiringAlertDays;
-                }).length,
-                expired: ads.filter(ad => new Date(ad.expires_at) < today || ad.status === 'expired').length
-            };
-
-            return stats;
-        } catch (error) {
-            console.error('Error calculating stats:', error);
-            return {
-                totalAds: 0,
-                activeAds: 0,
-                featuredAds: 0,
-                totalViews: 0,
-                expiringSoon: 0,
-                expired: 0
-            };
-        }
-    }
-
-    // Renew ad
-    async renewAd(adId) {
-        try {
-            const newExpiresAt = new Date(Date.now() + APP_CONFIG.adDurationDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-            const response = await fetch(
-                `${this.supabaseUrl}/rest/v1/ads?id=eq.${adId}`,
-                {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': this.supabaseKey,
-                        'Authorization': `Bearer ${this.supabaseKey}`
-                    },
-                    body: JSON.stringify({
-                        expires_at: newExpiresAt,
-                        status: 'active',
-                        renewed_at: new Date().toISOString()
-                    })
-                }
-            );
-
-            if (!response.ok) throw new Error('فشل في تجديد الإعلان');
-
-            return true;
-        } catch (error) {
-            console.error('Error renewing ad:', error);
-            throw error;
-        }
-    }
-
-    // Delete ad
-    async deleteAd(adId) {
-        try {
-            const response = await fetch(
-                `${this.supabaseUrl}/rest/v1/ads?id=eq.${adId}`,
-                {
-                    method: 'DELETE',
-                    headers: {
-                        'apikey': this.supabaseKey,
-                        'Authorization': `Bearer ${this.supabaseKey}`
-                    }
-                }
-            );
-
-            if (!response.ok) throw new Error('فشل في حذف الإعلان');
-
-            return true;
-        } catch (error) {
-            console.error('Error deleting ad:', error);
-            throw error;
-        }
-    }
-
-    // Logout (alias for signOut)
     logout() {
         this.signOut();
     }
 }
 
-// Initialize Auth manager
 const Auth = new AuthManager();
-
-// Export for use in other pages
 window.Auth = Auth;
 
-console.log('Auth module loaded - Supabase Auth Ready');
+console.log('✅ Auth fixed & ready');
