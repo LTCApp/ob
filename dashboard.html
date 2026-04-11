@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - سوق العبور</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Dashboard Page Styles */
+        .dashboard-page {
+            min-height: 100vh;
+            background: var(--background);
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 32px 20px;
+        }
+
+        .dashboard-welcome {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .dashboard-welcome-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dashboard-welcome-text h1 {
+            font-size: 24px;
+            margin: 0 0 4px 0;
+        }
+
+        .dashboard-welcome-text p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+        }
+
+        .stat-card-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .stat-card-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .dashboard-content {
+            padding: 24px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .dashboard-section {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .dashboard-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .dashboard-section-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dashboard-section-title svg {
+            width: 24px;
+            height: 24px;
+            color: var(--primary);
+        }
+
+        .my-ads-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .my-ad-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .my-ad-card:hover {
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow-md);
+        }
+
+        .my-ad-card-image {
+            height: 160px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .my-ad-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .my-ad-card-image .placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--background);
+            color: var(--text-secondary);
+        }
+
+        .my-ad-status {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .my-ad-status.active {
+            background: #10B981;
+            color: white;
+        }
+
+        .my-ad-status.expiring {
+            background: #F59E0B;
+            color: white;
+        }
+
+        .my-ad-status.expired {
+            background: #EF4444;
+            color: white;
+        }
+
+        .my-ad-card-content {
+            padding: 16px;
+        }
+
+        .my-ad-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .my-ad-card-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .my-ad-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .my-ad-card-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .my-ad-card-meta svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .my-ad-card-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .my-ad-card-actions .btn {
+            flex: 1;
+            min-width: 80px;
+            justify-content: center;
+        }
+
+        .btn-renew {
+            background: #10B981;
+            color: white;
+        }
+
+        .btn-renew:hover {
+            background: #059669;
+        }
+
+        .btn-delete {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #DC2626;
+        }
+
+        .logout-section {
+            text-align: center;
+            padding: 24px;
+        }
+
+        .logout-btn {
+            background: transparent;
+            color: var(--danger);
+            border: 2px solid var(--danger);
+            padding: 12px 32px;
+            border-radius: var(--radius);
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .loading-spinner .spinner {
+            margin: 0 auto 16px;
+        }
+
+        /* Modal Confirmation */
+        .confirm-modal {
+            text-align: center;
+        }
+
+        .confirm-modal-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .confirm-modal-icon.delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .confirm-modal-icon.delete svg {
+            stroke: var(--danger);
+        }
+
+        .confirm-modal h3 {
+            margin: 0 0 8px 0;
+        }
+
+        .confirm-modal p {
+            color: var(--text-secondary);
+            margin: 0 0 24px 0;
+        }
+
+        .confirm-modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        /* Empty State for Dashboard */
+        .dashboard-empty {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .dashboard-empty svg {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .dashboard-empty h3 {
+            margin: 0 0 8px 0;
+        }
+
+        .dashboard-empty p {
+            color: var(--text-secondary);
+            margin: 0 0 24px 0;
+        }
+
+        @media (max-width: 640px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .my-ads-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .my-ad-card-actions {
+                flex-direction: column;
+            }
+
+            .my-ad-card-actions .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-page">
+        <header class="dashboard-header">
+            <div class="container">
+                <div class="dashboard-welcome">
+                    <div class="dashboard-welcome-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <div class="dashboard-welcome-text">
+                        <h1 id="welcomeTitle">مرحباً بك</h1>
+                        <p id="welcomeSubtitle">إعلاناتك في مكان واحد</p>
+                    </div>
+                </div>
+
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="3" y1="9" x2="21" y2="9"></line>
+                                <line x1="9" y1="21" x2="9" y2="9"></line>
+                            </svg>
+                        </div>
+                        <div class="stat-card-value" id="totalAds">0</div>
+                        <div class="stat-card-label">إجمالي الإعلانات</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                        <div class="stat-card-value" id="activeAds">0</div>
+                        <div class="stat-card-label">إعلانات نشطة</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </div>
+                        <div class="stat-card-value" id="totalViews">0</div>
+                        <div class="stat-card-label">إجمالي المشاهدات</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <div class="stat-card-value" id="expiringSoon">0</div>
+                        <div class="stat-card-label">تنتهي قريباً</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard-content">
+            <!-- Quick Actions -->
+            <section class="dashboard-section">
+                <div class="dashboard-section-header">
+                    <h2 class="dashboard-section-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                        </svg>
+                        إجراءات سريعة
+                    </h2>
+                </div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <a href="add-ad.html" class="btn btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        إضافة إعلان جديد
+                    </a>
+                    <a href="ads.html" class="btn btn-secondary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        تصفح الإعلانات
+                    </a>
+                </div>
+            </section>
+
+            <!-- My Ads -->
+            <section class="dashboard-section">
+                <div class="dashboard-section-header">
+                    <h2 class="dashboard-section-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="9" y1="21" x2="9" y2="9"></line>
+                        </svg>
+                        إعلاناتي
+                    </h2>
+                    <div id="filterButtons" style="display: flex; gap: 8px;">
+                        <button class="btn btn-sm btn-secondary filter-btn active" data-filter="all">الكل</button>
+                        <button class="btn btn-sm btn-secondary filter-btn" data-filter="active">نشطة</button>
+                        <button class="btn btn-sm btn-secondary filter-btn" data-filter="expiring">تنتهي قريباً</button>
+                    </div>
+                </div>
+                <div id="myAdsContainer">
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p>جاري تحميل إعلاناتك...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Logout Section -->
+            <section class="logout-section">
+                <button class="logout-btn" id="logoutBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    تسجيل الخروج
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Dashboard Logic
+        let userAds = [];
+        let currentFilter = 'all';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check if user is logged in
+            if (typeof Auth === 'undefined') {
+                console.error('Auth not loaded');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const user = Auth.getCurrentUser();
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Update welcome message
+            document.getElementById('welcomeTitle').textContent = `مرحباً، ${user.name || 'مستخدم'}`;
+
+            // Load user stats and ads
+            await loadDashboardData();
+
+            // Setup event listeners
+            setupEventListeners();
+        });
+
+        async function loadDashboardData() {
+            const user = Auth.getCurrentUser();
+            if (!user) return;
+
+            try {
+                // Load stats
+                const stats = await Auth.getUserStats(user.id);
+                updateStats(stats);
+
+                // Load ads
+                userAds = await Auth.getUserAds(user.id);
+                renderMyAds();
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showToast('حدث خطأ في تحميل البيانات', 'error');
+            }
+        }
+
+        function updateStats(stats) {
+            document.getElementById('totalAds').textContent = stats.totalAds;
+            document.getElementById('activeAds').textContent = stats.activeAds;
+            document.getElementById('totalViews').textContent = stats.totalViews;
+            document.getElementById('expiringSoon').textContent = stats.expiringSoon;
+        }
+
+        function getAdStatus(ad) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const expiresAt = new Date(ad.expires_at);
+            expiresAt.setHours(0, 0, 0, 0);
+
+            const daysLeft = Math.ceil((expiresAt - today) / (1000 * 60 * 60 * 24));
+
+            if (daysLeft < 0) {
+                return { status: 'expired', label: 'منتهي', daysLeft: daysLeft };
+            } else if (daysLeft <= APP_CONFIG.expiringAlertDays) {
+                return { status: 'expiring', label: `ينتهي خلال ${daysLeft} يوم`, daysLeft: daysLeft };
+            } else {
+                return { status: 'active', label: 'نشط', daysLeft: daysLeft };
+            }
+        }
+
+        function renderMyAds() {
+            const container = document.getElementById('myAdsContainer');
+
+            // Filter ads
+            let filteredAds = userAds;
+            if (currentFilter === 'active') {
+                filteredAds = userAds.filter(ad => getAdStatus(ad).status === 'active');
+            } else if (currentFilter === 'expiring') {
+                filteredAds = userAds.filter(ad => getAdStatus(ad).status === 'expiring');
+            }
+
+            if (filteredAds.length === 0) {
+                container.innerHTML = `
+                    <div class="dashboard-empty">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="9" y1="21" x2="9" y2="9"></line>
+                        </svg>
+                        <h3>لا توجد إعلانات</h3>
+                        <p>لم تقم بنشر أي إعلان بعد. ابدأ الآن وأضف أول إعلان لك!</p>
+                        <a href="add-ad.html" class="btn btn-primary">إضافة إعلان جديد</a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="my-ads-grid">
+                    ${filteredAds.map(ad => createMyAdCard(ad)).join('')}
+                </div>
+            `;
+        }
+
+        function createMyAdCard(ad) {
+            const status = getAdStatus(ad);
+            const placeholder = ad.images && ad.images.length > 0
+                ? `<img src="${ad.images[0]}" alt="${ad.title}">`
+                : `<div class="placeholder">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                </div>`;
+
+            return `
+                <div class="my-ad-card" data-id="${ad.id}">
+                    <div class="my-ad-card-image">
+                        ${placeholder}
+                        <span class="my-ad-status ${status.status}">${status.label}</span>
+                    </div>
+                    <div class="my-ad-card-content">
+                        <h3 class="my-ad-card-title">${ad.title}</h3>
+                        <p class="my-ad-card-price">${App.formatPrice(ad.price)}</p>
+                        <div class="my-ad-card-meta">
+                            <span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                ${ad.views || 0} مشاهدة
+                            </span>
+                            <span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                ${App.formatDate(ad.created_at)}
+                            </span>
+                        </div>
+                        <div class="my-ad-card-actions">
+                            <a href="ad-detail.html?id=${ad.id}" class="btn btn-secondary btn-sm">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                عرض
+                            </a>
+                            ${status.status !== 'expired' ? `
+                                <button class="btn btn-sm btn-renew" onclick="renewAd('${ad.id}')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="23 4 23 10 17 10"></polyline>
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                    </svg>
+                                    تجديد
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-sm btn-delete" onclick="confirmDeleteAd('${ad.id}', '${ad.title}')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                                حذف
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function renewAd(adId) {
+            try {
+                showToast('جاري تجديد الإعلان...', 'info');
+                await Auth.renewAd(adId);
+                showToast('تم تجديد الإعلان بنجاح لمدة 15 يوماً إضافية', 'success');
+                await loadDashboardData();
+            } catch (error) {
+                console.error('Error renewing ad:', error);
+                showToast('حدث خطأ أثناء تجديد الإعلان', 'error');
+            }
+        }
+
+        function confirmDeleteAd(adId, adTitle) {
+            showModal('حذف الإعلان', `
+                <div class="confirm-modal">
+                    <div class="confirm-modal-icon delete">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </div>
+                    <h3>هل أنت متأكد من حذف هذا الإعلان؟</h3>
+                    <p>"${adTitle}"<br>لا يمكن التراجع عن هذا الإجراء.</p>
+                    <div class="confirm-modal-actions">
+                        <button class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
+                        <button class="btn btn-delete" onclick="deleteAd('${adId}')">نعم، احذف</button>
+                    </div>
+                </div>
+            `);
+        }
+
+        async function deleteAd(adId) {
+            try {
+                closeModal();
+                showToast('جاري حذف الإعلان...', 'info');
+                await Auth.deleteAd(adId);
+                showToast('تم حذف الإعلان بنجاح', 'success');
+                await loadDashboardData();
+            } catch (error) {
+                console.error('Error deleting ad:', error);
+                showToast('حدث خطأ أثناء حذف الإعلان', 'error');
+            }
+        }
+
+        function setupEventListeners() {
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    renderMyAds();
+                });
+            });
+
+            // Logout button
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                showModal('تسجيل الخروج', `
+                    <div class="confirm-modal">
+                        <h3>هل أنت متأكد من تسجيل الخروج؟</h3>
+                        <p>ستحتاج لتسجيل الدخول مرة أخرى للوصول إلى إعلاناتك.</p>
+                        <div class="confirm-modal-actions">
+                            <button class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
+                            <button class="btn btn-primary" onclick="performLogout()">تسجيل الخروج</button>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        function performLogout() {
+            closeModal();
+            Auth.logout();
+        }
+    </script>
+</body>
+</html>
