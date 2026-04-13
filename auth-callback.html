@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جاري التحقق... - OB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
+        }
+        .callback-container { text-align: center; color: white; padding: 40px; }
+        .spinner {
+            width: 60px; height: 60px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white; border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 24px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        h1 { font-size: 24px; margin-bottom: 12px; }
+        p { opacity: 0.9; font-size: 16px; }
+        .error { color: #FCA5A5; }
+        .success { color: #86EFAC; }
+    </style>
+</head>
+<body>
+    <div class="callback-container" id="callbackContainer">
+        <div class="spinner" id="spinner"></div>
+        <h1 id="statusTitle">جاري التحقق...</h1>
+        <p id="statusText">يرجى الانتظار قليلاً</p>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        (async function() {
+            const titleEl = document.getElementById('statusTitle');
+            const textEl = document.getElementById('statusText');
+            const spinnerEl = document.getElementById('spinner');
+
+            try {
+                // Initialize Supabase client
+                const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+                // Check for error in URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const error = urlParams.get('error');
+                if (error) {
+                    throw new Error(urlParams.get('error_description') || error);
+                }
+
+                // Check for code in URL (PKCE flow) - exchange it for session
+                const code = urlParams.get('code');
+                if (code) {
+                    const { data, error: exchangeError } = await client.auth.exchangeCodeForSession(code);
+                    if (exchangeError) throw exchangeError;
+                }
+
+                // Get current session (works for both hash-based and code-based flows)
+                const { data: { session }, error: sessionError } = await client.auth.getSession();
+
+                if (sessionError) throw sessionError;
+
+                if (!session) {
+                    // Wait a moment and try again (sometimes hash tokens need processing)
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    const { data: { session: retrySession }, error: retryError } = await client.auth.getSession();
+                    if (retryError) throw retryError;
+                    if (!retrySession) throw new Error('لم يتم العثور على جلسة');
+                    
+                    // Use retry session
+                    handleSession(retrySession);
+                } else {
+                    handleSession(session);
+                }
+
+                function handleSession(sess) {
+                    const user = sess.user;
+                    const provider = user.app_metadata?.provider || 'oauth';
+
+                    // Save user to localStorage
+                    localStorage.setItem('ob_user', JSON.stringify({
+                        id: user.id,
+                        email: user.email,
+                        name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'مستخدم',
+                        picture: user.user_metadata?.avatar_url || user.user_metadata?.picture,
+                        provider: provider,
+                        created_at: user.created_at
+                    }));
+
+                    // Save session
+                    localStorage.setItem('ob_session', JSON.stringify({
+                        access_token: sess.access_token,
+                        refresh_token: sess.refresh_token,
+                        expires_at: sess.expires_at ? sess.expires_at * 1000 : Date.now() + 3600000
+                    }));
+
+                    // Try to save user to database
+                    fetch(SUPABASE_URL + '/rest/v1/users', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': 'Bearer ' + sess.access_token,
+                            'Prefer': 'resolution=merge-duplicates'
+                        },
+                        body: JSON.stringify({
+                            id: user.id,
+                            email: user.email,
+                            name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'مستخدم',
+                            provider: provider,
+                            avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture,
+                            created_at: user.created_at
+                        })
+                    }).catch(e => console.log('User save note:', e));
+
+                    // Success
+                    titleEl.textContent = 'تم تسجيل الدخول بنجاح!';
+                    titleEl.classList.add('success');
+                    textEl.textContent = 'جاري التحويل...';
+                    spinnerEl.style.display = 'none';
+
+                    // Clean URL and redirect
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 500);
+                }
+
+            } catch (err) {
+                console.error('Auth callback error:', err);
+                titleEl.textContent = 'حدث خطأ';
+                titleEl.classList.add('error');
+                textEl.textContent = err.message || 'يرجى المحاولة مرة أخرى';
+                spinnerEl.style.display = 'none';
+                setTimeout(() => { window.location.href = 'login.html'; }, 3000);
+            }
+        })();
+    </script>
+</body>
+</html>
