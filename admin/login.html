@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل دخول الأدمن - OB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .admin-login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px;
+        }
+
+        .admin-login-container {
+            background: white;
+            border-radius: 16px;
+            padding: 48px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .admin-login-logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .admin-login-logo svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+        }
+
+        .admin-login-logo h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1a1a2e;
+            margin: 0;
+        }
+
+        .admin-login-logo p {
+            color: #6b7280;
+            margin: 8px 0 0 0;
+        }
+
+        .admin-form-group {
+            margin-bottom: 20px;
+        }
+
+        .admin-form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .admin-form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .admin-form-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .admin-login-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .admin-login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(37, 99, 235, 0.5);
+        }
+
+        .admin-back-link {
+            display: block;
+            text-align: center;
+            margin-top: 24px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .admin-back-link:hover {
+            color: #2563eb;
+        }
+
+        .admin-error {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .admin-error.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-login-page">
+        <div class="admin-login-container">
+            <div class="admin-login-logo">
+                <svg width="64" height="64" viewBox="0 0 40 40" fill="none">
+                    <rect width="40" height="40" rx="10" fill="#2563EB"/>
+                    <path d="M12 20L18 14L24 20L18 26L12 20Z" fill="white"/>
+                    <path d="M20 14L26 20L20 26L14 20L20 14Z" fill="white" fill-opacity="0.7"/>
+                </svg>
+                <h1>OB Admin</h1>
+                <p>لوحة تحكم لأصحاب الموقع</p>
+            </div>
+
+            <div class="admin-error" id="adminError"></div>
+
+            <form id="adminLoginForm">
+                <div class="admin-form-group">
+                    <label for="adminEmail">البريد الإلكتروني</label>
+                    <input type="email" id="adminEmail" class="admin-form-input" placeholder="admin@example.com" required>
+                </div>
+                <div class="admin-form-group">
+                    <label for="adminPassword">كلمة المرور</label>
+                    <input type="password" id="adminPassword" class="admin-form-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="admin-login-btn">تسجيل الدخول</button>
+            </form>
+
+            <a href="../index.html" class="admin-back-link">العودة للموقع</a>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script>
+        // Admin Login Logic
+        const ADMIN_CREDENTIALS = {
+            email: 'admin@ob.com',
+            password: 'admin123'
+        };
+
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            const errorEl = document.getElementById('adminError');
+
+            if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
+                // Save admin session
+                sessionStorage.setItem('ob_admin', JSON.stringify({
+                    email: email,
+                    loginTime: new Date().toISOString()
+                }));
+                window.location.href = 'dashboard.html';
+            } else {
+                errorEl.textContent = 'بيانات الدخول غير صحيحة';
+                errorEl.classList.add('show');
+                setTimeout(() => errorEl.classList.remove('show'), 3000);
+            }
+        });
+    </script>
+</body>
+</html>

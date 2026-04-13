@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - OB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .dashboard-page { min-height: 100vh; background: var(--background); }
+        .dashboard-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; padding: 32px 20px; }
+        .dashboard-welcome { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+        .dashboard-welcome-icon { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; }
+        .dashboard-welcome-text h1 { font-size: 24px; margin: 0 0 4px 0; }
+        .dashboard-welcome-text p { margin: 0; opacity: 0.9; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-top: 24px; }
+        .stat-card { background: rgba(255,255,255,0.15); border-radius: var(--radius); padding: 20px; text-align: center; }
+        .stat-card-icon { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+        .stat-card-value { font-size: 28px; font-weight: 700; }
+        .stat-card-label { font-size: 14px; opacity: 0.9; }
+        .dashboard-content { padding: 24px 20px; max-width: 1200px; margin: 0 auto; }
+        .dashboard-section { background: var(--surface); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+        .dashboard-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+        .dashboard-section-title { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .dashboard-section-title svg { width: 24px; height: 24px; color: var(--primary); }
+        .my-ads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .my-ad-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: var(--transition); }
+        .my-ad-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); }
+        .my-ad-card.featured-card { border-color: #F59E0B; box-shadow: 0 0 0 2px rgba(245,158,11,0.2); }
+        .my-ad-card-image { height: 160px; overflow: hidden; position: relative; }
+        .my-ad-card-image img { width: 100%; height: 100%; object-fit: cover; }
+        .my-ad-card-image .placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--background); color: var(--text-secondary); }
+        .my-ad-status { position: absolute; top: 12px; right: 12px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .my-ad-status.active { background: #10B981; color: white; }
+        .my-ad-status.expiring { background: #F59E0B; color: white; }
+        .my-ad-status.expired { background: #EF4444; color: white; }
+        .my-ad-status.featured { background: linear-gradient(135deg, #F59E0B, #D97706); color: white; }
+        .my-ad-status.pending_featured { background: #ede9fe; color: #7c3aed; }
+        .my-ad-status.pending { background: #fef3c7; color: #d97706; border: 1.5px solid #fcd34d; }
+        .my-ad-status.rejected { background: #fee2e2; color: #dc2626; }
+        .my-ad-card-content { padding: 16px; }
+        .my-ad-card-title { font-size: 16px; font-weight: 600; margin: 0 0 8px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .my-ad-card-price { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+        .my-ad-card-meta { display: flex; align-items: center; gap: 16px; font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+        .my-ad-card-meta span { display: flex; align-items: center; gap: 4px; }
+        .my-ad-card-meta svg { width: 14px; height: 14px; }
+        .my-ad-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .my-ad-card-actions .btn { flex: 1; min-width: 80px; justify-content: center; }
+        .btn-delete { background: var(--danger); color: white; }
+        .btn-delete:hover { background: #DC2626; }
+        .btn-feature { background: linear-gradient(135deg, #F59E0B, #D97706); color: white; font-size: 12px; }
+        .btn-feature:hover { background: linear-gradient(135deg, #D97706, #B45309); transform: translateY(-1px); }
+        .logout-section { text-align: center; padding: 24px; }
+        .logout-btn { background: transparent; color: var(--danger); border: 2px solid var(--danger); padding: 12px 32px; border-radius: var(--radius); font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; }
+        .logout-btn:hover { background: var(--danger); color: white; }
+        .loading-spinner { text-align: center; padding: 60px 20px; }
+        .loading-spinner .spinner { margin: 0 auto 16px; }
+        .confirm-modal { text-align: center; }
+        .confirm-modal-icon { width: 64px; height: 64px; border-radius: 50%; background: rgba(239,68,68,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+        .confirm-modal-icon.delete { background: rgba(239,68,68,0.1); color: var(--danger); }
+        .confirm-modal-icon.delete svg { stroke: var(--danger); }
+        .confirm-modal h3 { margin: 0 0 8px 0; }
+        .confirm-modal p { color: var(--text-secondary); margin: 0 0 24px 0; }
+        .confirm-modal-actions { display: flex; gap: 12px; justify-content: center; }
+        .dashboard-empty { text-align: center; padding: 60px 20px; }
+        .dashboard-empty svg { color: var(--text-secondary); margin-bottom: 16px; }
+        .dashboard-empty h3 { margin: 0 0 8px 0; }
+        .dashboard-empty p { color: var(--text-secondary); margin: 0 0 24px 0; }
+
+        /* Featured Requests Section */
+        .featured-request-card {
+            border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+        }
+        .featured-request-card.pending { border-color: #F59E0B; background: #FFFBEB; }
+        .featured-request-card.approved { border-color: #10B981; background: #ECFDF5; }
+        .featured-request-card.rejected { border-color: #EF4444; background: #FEF2F2; }
+        .request-status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+        .request-status-badge.pending { background: #FEF3C7; color: #D97706; }
+        .request-status-badge.approved { background: #D1FAE5; color: #059669; }
+        .request-status-badge.rejected { background: #FEE2E2; color: #DC2626; }
+
+        /* Featured Modal */
+        .featured-modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); display: none; align-items: flex-start;
+            justify-content: center; z-index: 9999;
+            padding: 16px; overflow-y: auto;
+        }
+        .featured-modal-overlay.show { display: flex; }
+        .featured-payment-modal {
+            background: white; border-radius: 20px; max-width: 520px; width: 100%;
+            overflow: hidden; animation: slideUp 0.3s ease;
+            margin: auto; flex-shrink: 0;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .featured-modal-header { background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%); padding: 20px 20px 16px; color: white; text-align: center; position: relative; }
+        .featured-modal-header .star-icon { width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+        .featured-modal-header h2 { font-size: 20px; margin: 0 0 4px; }
+        .featured-modal-header p { opacity: 0.9; margin: 0; font-size: 13px; }
+        .modal-close-btn { position: absolute; top: 12px; left: 12px; background: rgba(255,255,255,0.2); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 18px; line-height: 1; transition: background 0.2s; }
+        .modal-close-btn:hover { background: rgba(255,255,255,0.35); }
+        .featured-modal-body { padding: 16px 20px; }
+        .modal-error-box { display: none; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; color: #DC2626; font-size: 14px; font-weight: 600; align-items: center; gap: 8px; }
+        .modal-error-box.show { display: flex; }
+        .modal-error-box svg { flex-shrink: 0; }
+        .payment-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .payment-method-card { border: 2px solid #e2e8f0; border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.3s; text-align: center; }
+        .payment-method-card:hover, .payment-method-card.selected { border-color: #2563EB; background: #EFF6FF; }
+        .payment-method-card .method-icon { font-size: 28px; margin-bottom: 8px; }
+        .payment-method-card .method-name { font-weight: 700; font-size: 14px; color: #1e293b; }
+        .payment-method-card .method-number { font-size: 13px; color: #2563EB; margin-top: 4px; font-weight: 600; }
+        .payment-info-box { background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+        .payment-info-box .amount { font-size: 28px; font-weight: 800; color: #2563EB; text-align: center; margin-bottom: 4px; }
+        .payment-info-box .duration { text-align: center; color: #64748b; font-size: 14px; }
+        .payment-info-box .benefits { margin-top: 12px; padding-top: 12px; border-top: 1px solid #BFDBFE; }
+        .benefit-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 14px; color: #374151; }
+        .benefit-item svg { color: #10B981; flex-shrink: 0; }
+        .form-step { display: none; }
+        .form-step.active { display: block; }
+        .step-indicators { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 24px; }
+        .step-dot { width: 10px; height: 10px; border-radius: 50%; background: #e2e8f0; transition: all 0.3s; }
+        .step-dot.active { background: #2563EB; transform: scale(1.3); }
+        .step-dot.done { background: #10B981; }
+        .featured-form-group { margin-bottom: 16px; }
+        .featured-form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #374151; font-size: 14px; }
+        .featured-form-group input, .featured-form-group textarea { width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-family: inherit; font-size: 14px; outline: none; transition: border-color 0.3s; }
+        .featured-form-group input:focus { border-color: #2563EB; }
+        .screenshot-upload { border: 2px dashed #BFDBFE; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s; }
+        .screenshot-upload:hover { border-color: #2563EB; background: #EFF6FF; }
+        .screenshot-upload input { display: none; }
+        .screenshot-preview { max-width: 100%; max-height: 150px; border-radius: 8px; margin-top: 12px; }
+        .featured-modal-footer { padding: 12px 20px 20px; display: flex; gap: 10px; }
+        .btn-featured-back { flex: 1; background: #f1f5f9; color: #64748b; border: none; border-radius: 10px; padding: 13px; font-family: inherit; font-weight: 600; cursor: pointer; font-size: 14px; }
+        .btn-featured-next { flex: 2; background: #2563EB; color: white; border: none; border-radius: 10px; padding: 13px; font-family: inherit; font-weight: 700; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+        .btn-featured-next:hover { background: #1E40AF; }
+        .btn-featured-next:disabled { opacity: 0.6; cursor: not-allowed; }
+        .success-step { text-align: center; padding: 16px 0; }
+        .success-icon { width: 72px; height: 72px; background: #DBEAFE; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #2563EB; }
+        .success-step h3 { font-size: 20px; margin: 0 0 10px; color: #1e293b; }
+        .success-step p { color: #64748b; line-height: 1.8; margin: 0 0 6px; font-size: 14px; }
+
+        @media (max-width: 640px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .my-ads-grid { grid-template-columns: 1fr; }
+            .my-ad-card-actions { flex-direction: column; }
+            .my-ad-card-actions .btn { width: 100%; }
+            .payment-methods { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-page">
+        <header class="dashboard-header">
+            <div class="container">
+                <div class="dashboard-welcome">
+                    <div class="dashboard-welcome-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </div>
+                    <div class="dashboard-welcome-text">
+                        <h1 id="welcomeTitle">مرحباً بك</h1>
+                        <p id="welcomeSubtitle">إعلاناتك في مكان واحد</p>
+                    </div>
+                </div>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                        </div>
+                        <div class="stat-card-value" id="totalAds">0</div>
+                        <div class="stat-card-label">إجمالي الإعلانات</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </div>
+                        <div class="stat-card-value" id="activeAds">0</div>
+                        <div class="stat-card-label">إعلانات نشطة</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        </div>
+                        <div class="stat-card-value" id="featuredAds">0</div>
+                        <div class="stat-card-label">إعلانات مميزة</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </div>
+                        <div class="stat-card-value" id="totalViews">0</div>
+                        <div class="stat-card-label">إجمالي المشاهدات</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard-content">
+            <!-- Quick Actions -->
+            <section class="dashboard-section">
+                <div class="dashboard-section-header">
+                    <h2 class="dashboard-section-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                        إجراءات سريعة
+                    </h2>
+                </div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <a href="add-ad.html" class="btn btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        إضافة إعلان جديد
+                    </a>
+                    <a href="ads.html" class="btn btn-secondary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        تصفح الإعلانات
+                    </a>
+                </div>
+            </section>
+
+            <!-- Featured Requests Status -->
+            <section class="dashboard-section" id="featuredRequestsSection" style="display:none;">
+                <div class="dashboard-section-header">
+                    <h2 class="dashboard-section-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        طلبات التمييز
+                    </h2>
+                </div>
+                <div id="featuredRequestsList"></div>
+            </section>
+
+            <!-- My Ads -->
+            <section class="dashboard-section">
+                <div class="dashboard-section-header">
+                    <h2 class="dashboard-section-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                        إعلاناتي
+                    </h2>
+                    <div id="filterButtons" style="display: flex; gap: 8px;">
+                        <button class="btn btn-sm btn-secondary filter-btn active" data-filter="all">الكل</button>
+                        <button class="btn btn-sm btn-secondary filter-btn" data-filter="pending">⏳ انتظار</button>
+                        <button class="btn btn-sm btn-secondary filter-btn" data-filter="active">نشطة</button>
+                        <button class="btn btn-sm btn-secondary filter-btn" data-filter="featured">مميزة</button>
+                        <button class="btn btn-sm btn-secondary filter-btn" data-filter="expiring">تنتهي قريباً</button>
+                    </div>
+                </div>
+                <div id="myAdsContainer">
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p>جاري تحميل إعلاناتك...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Logout -->
+            <section class="logout-section">
+                <button class="logout-btn" id="logoutBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    تسجيل الخروج
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <!-- Featured Ad Payment Modal (from dashboard) -->
+    <div class="featured-modal-overlay" id="featuredModal">
+        <div class="featured-payment-modal">
+            <div class="featured-modal-header">
+                <button class="modal-close-btn" onclick="closeFeaturedModal()" title="إغلاق">✕</button>
+                <div class="star-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                </div>
+                <h2>تمييز الإعلان</h2>
+                <p>أكمل بيانات الدفع لتمييز إعلانك</p>
+            </div>
+            <div class="featured-modal-body">
+                <!-- Inline Error Box -->
+                <div class="modal-error-box" id="dmErrorBox">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <span id="dmErrorText"></span>
+                </div>
+                <div class="step-indicators">
+                    <div class="step-dot active" id="dot1"></div>
+                    <div class="step-dot" id="dot2"></div>
+                    <div class="step-dot" id="dot3"></div>
+                </div>
+
+                <div class="form-step active" id="step1">
+                    <div class="payment-info-box">
+                        <div class="amount">25 جنيه مصري</div>
+                        <div class="duration">تمييز لمدة 15 يوماً</div>
+                        <div class="benefits">
+                            <div class="benefit-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> يظهر في أعلى الصفحة الرئيسية</div>
+                            <div class="benefit-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> أعلى نتائج البحث</div>
+                            <div class="benefit-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> شارة "مميز" على إعلانك</div>
+                        </div>
+                    </div>
+                    <p style="font-weight: 700; margin-bottom: 12px; color: #374151;">اختر طريقة الدفع:</p>
+                    <div class="payment-methods">
+                        <div class="payment-method-card" id="dm_instapay" onclick="selectPayMethod('instapay')">
+                            <div class="method-icon">💳</div>
+                            <div class="method-name">إنستاباي</div>
+                            <div class="method-number" id="dm_ipNumber">instapay@ob</div>
+                        </div>
+                        <div class="payment-method-card" id="dm_vodafone" onclick="selectPayMethod('vodafone')">
+                            <div class="method-icon">📱</div>
+                            <div class="method-name">فودافون كاش</div>
+                            <div class="method-number" id="dm_vfNumber">010xxxxxxxx</div>
+                        </div>
+                    </div>
+                    <div id="dm_payInstructions" style="display:none; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 10px; padding: 14px; margin-top: 12px; font-size: 14px; line-height: 1.8; color: #1E40AF;"></div>
+                </div>
+
+                <div class="form-step" id="step2">
+                    <div class="featured-form-group">
+                        <label>اسمك الكامل <span style="color:red">*</span></label>
+                        <input type="text" id="dm_senderName" placeholder="مثال: محمد أحمد">
+                    </div>
+                    <div class="featured-form-group">
+                        <label>رقم موبايلك <span style="color:red">*</span></label>
+                        <input type="tel" id="dm_senderPhone" placeholder="01xxxxxxxxx">
+                    </div>
+                    <div class="featured-form-group">
+                        <label>رقم العملية / المرجع <span style="color:red">*</span></label>
+                        <input type="text" id="dm_transRef" placeholder="الرقم المرجعي للتحويل">
+                    </div>
+                    <div class="featured-form-group">
+                        <label>لقطة شاشة التحويل <span style="color:#64748b; font-weight:400">(اختياري لكن ينصح به)</span></label>
+                        <div class="screenshot-upload" onclick="document.getElementById('dm_screenshotInput').click()">
+                            <input type="file" id="dm_screenshotInput" accept="image/*">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            <p style="margin: 8px 0 0; color: #94a3b8; font-size: 14px;">اضغط لرفع لقطة الشاشة</p>
+                        </div>
+                        <img id="dm_screenshotPreview" style="display:none; max-width:100%; max-height:150px; border-radius:8px; margin-top:12px;">
+                    </div>
+                </div>
+
+                <div class="form-step" id="step3">
+                    <div class="success-step">
+                        <div class="success-icon">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                        <h3>تم إرسال طلبك بنجاح!</h3>
+                        <p>سيراجع المشرف طلبك في أقرب وقت ويقوم بتمييز إعلانك.</p>
+                        <p style="font-size: 14px;">عادةً ما يتم المراجعة خلال <strong>24 ساعة</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="featured-modal-footer">
+                <button class="btn-featured-back" id="dm_backBtn" onclick="dmBack()" style="display:none">رجوع</button>
+                <button class="btn-featured-next" id="dm_nextBtn" onclick="dmNext()">التالي</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let userAds = [];
+        let currentFilter = 'all';
+        let featuredTargetAdId = null;
+        let dmStep = 1;
+        let dmPayMethod = '';
+        let dmScreenshotFile = null;
+
+        const DM_PAYMENT_INFO = {
+            instapay: { account: APP_CONFIG.paymentInstapay || 'instapay@ob', instructions: `حوّل مبلغ 25 جنيه عبر إنستاباي لحساب: <strong>${APP_CONFIG.paymentInstapay || 'instapay@ob'}</strong><br>ثم أدخل اسمك ورقم العملية في الخطوة التالية.` },
+            vodafone: { account: APP_CONFIG.paymentVodafone || '010xxxxxxxx', instructions: `حوّل مبلغ 25 جنيه عبر فودافون كاش للرقم: <strong>${APP_CONFIG.paymentVodafone || '010xxxxxxxx'}</strong><br>ثم أدخل اسمك ورقم العملية في الخطوة التالية.` }
+        };
+
+        function showDmError(msg) {
+            const box = document.getElementById('dmErrorBox');
+            document.getElementById('dmErrorText').textContent = msg;
+            box.classList.add('show');
+            setTimeout(() => box.classList.remove('show'), 4000);
+        }
+
+        function clearDmError() {
+            document.getElementById('dmErrorBox').classList.remove('show');
+        }
+
+        function selectPayMethod(method) {
+            dmPayMethod = method;
+            clearDmError();
+            document.getElementById('dm_instapay').classList.toggle('selected', method === 'instapay');
+            document.getElementById('dm_vodafone').classList.toggle('selected', method === 'vodafone');
+            const info = DM_PAYMENT_INFO[method];
+            const box = document.getElementById('dm_payInstructions');
+            box.innerHTML = `📌 <strong>تعليمات الدفع:</strong><br>${info.instructions}`;
+            box.style.display = 'block';
+        }
+
+        function updateDmDots(step) {
+            [1,2,3].forEach(i => {
+                const dot = document.getElementById('dot' + i);
+                dot.className = 'step-dot' + (i === step ? ' active' : i < step ? ' done' : '');
+            });
+        }
+
+        function openFeaturedModal(adId) {
+            featuredTargetAdId = adId;
+            dmStep = 1;
+            dmPayMethod = '';
+            dmScreenshotFile = null;
+            clearDmError();
+
+            document.getElementById('featuredModal').classList.add('show');
+            document.getElementById('step1').classList.add('active');
+            document.getElementById('step2').classList.remove('active');
+            document.getElementById('step3').classList.remove('active');
+            document.getElementById('dm_backBtn').style.display = 'none';
+            document.getElementById('dm_nextBtn').textContent = 'التالي';
+            document.getElementById('dm_ipNumber').textContent = DM_PAYMENT_INFO.instapay.account;
+            document.getElementById('dm_vfNumber').textContent = DM_PAYMENT_INFO.vodafone.account;
+            document.getElementById('dm_payInstructions').style.display = 'none';
+            updateDmDots(1);
+        }
+
+        function closeFeaturedModal() {
+            document.getElementById('featuredModal').classList.remove('show');
+        }
+
+        async function dmNext() {
+            clearDmError();
+
+            if (dmStep === 1) {
+                if (!dmPayMethod) {
+                    showDmError('يرجى اختيار طريقة الدفع أولاً');
+                    return;
+                }
+                dmStep = 2;
+                document.getElementById('step1').classList.remove('active');
+                document.getElementById('step2').classList.add('active');
+                document.getElementById('dm_backBtn').style.display = 'block';
+                document.getElementById('dm_nextBtn').textContent = 'إرسال الطلب';
+                updateDmDots(2);
+
+            } else if (dmStep === 2) {
+                const name = document.getElementById('dm_senderName').value.trim();
+                const phone = document.getElementById('dm_senderPhone').value.trim();
+                const ref = document.getElementById('dm_transRef').value.trim();
+
+                if (!name || !phone || !ref) {
+                    showDmError('يرجى ملء جميع الحقول المطلوبة (الاسم، الرقم، ورقم العملية)');
+                    return;
+                }
+                if (!/^01[0-9]{9}$/.test(phone)) {
+                    showDmError('يرجى إدخال رقم موبايل مصري صحيح (11 رقم يبدأ بـ 01)');
+                    return;
+                }
+
+                const btn = document.getElementById('dm_nextBtn');
+                btn.disabled = true;
+                btn.textContent = 'جاري الإرسال...';
+
+                try {
+                    const user = Auth.getCurrentUser();
+                    let screenshotUrl = null;
+                    if (dmScreenshotFile) {
+                        try { screenshotUrl = await supabaseDB.uploadImage(dmScreenshotFile, 'featured-' + featuredTargetAdId); } catch(e) {}
+                    }
+
+                    await supabaseDB.createFeaturedRequest({
+                        ad_id: featuredTargetAdId,
+                        user_id: user ? user.id : null,
+                        user_name: name,
+                        user_phone: phone,
+                        transaction_ref: ref,
+                        payment_method: dmPayMethod,
+                        screenshot_url: screenshotUrl,
+                        amount: APP_CONFIG.featuredAdPrice || 25
+                    });
+
+                    dmStep = 3;
+                    document.getElementById('step2').classList.remove('active');
+                    document.getElementById('step3').classList.add('active');
+                    document.getElementById('dm_backBtn').style.display = 'none';
+                    document.getElementById('dm_nextBtn').textContent = 'إغلاق';
+                    btn.disabled = false;
+                    updateDmDots(3);
+                    loadFeaturedRequests(user.id);
+
+                } catch (error) {
+                    console.error('Featured request error:', error);
+                    showDmError('حدث خطأ في الإرسال. تحقق من الاتصال بالإنترنت وحاول مرة أخرى.');
+                    btn.disabled = false;
+                    btn.textContent = 'إرسال الطلب';
+                }
+
+            } else if (dmStep === 3) {
+                closeFeaturedModal();
+                loadDashboardData();
+            }
+        }
+
+        function dmBack() {
+            if (dmStep === 2) {
+                clearDmError();
+                dmStep = 1;
+                document.getElementById('step2').classList.remove('active');
+                document.getElementById('step1').classList.add('active');
+                document.getElementById('dm_backBtn').style.display = 'none';
+                document.getElementById('dm_nextBtn').textContent = 'التالي';
+                updateDmDots(1);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof Auth === 'undefined') { window.location.href = 'login.html'; return; }
+            const user = Auth.getCurrentUser();
+            if (!user) { window.location.href = 'login.html'; return; }
+
+            document.getElementById('welcomeTitle').textContent = `مرحباً، ${user.name || 'مستخدم'}`;
+
+            document.getElementById('dm_screenshotInput').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                dmScreenshotFile = file;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const p = document.getElementById('dm_screenshotPreview');
+                    p.src = ev.target.result;
+                    p.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            });
+
+            await loadDashboardData();
+            await loadFeaturedRequests(user.id);
+            setupEventListeners();
+        });
+
+        async function loadDashboardData() {
+            const user = Auth.getCurrentUser();
+            if (!user) return;
+            try {
+                const stats = await Auth.getUserStats(user.id);
+                document.getElementById('totalAds').textContent = stats.totalAds;
+                document.getElementById('activeAds').textContent = stats.activeAds;
+                document.getElementById('featuredAds').textContent = stats.featuredAds;
+                document.getElementById('totalViews').textContent = stats.totalViews;
+
+                userAds = await Auth.getUserAds(user.id);
+                renderMyAds();
+                const pendingCount = userAds ? userAds.filter(a => a.status === 'pending').length : 0;
+                if (pendingCount > 0 && !sessionStorage.getItem('pending_notif_shown')) {
+                    setTimeout(() => App.showToast(`لديك ${pendingCount} إعلان في انتظار موافقة الإدارة ⏳`, 'info'), 500);
+                    sessionStorage.setItem('pending_notif_shown', '1');
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                App.showToast('حدث خطأ في تحميل البيانات', 'error');
+            }
+        }
+
+        async function loadFeaturedRequests(userId) {
+            try {
+                const requests = await supabaseDB.getUserFeaturedRequests(userId);
+                const section = document.getElementById('featuredRequestsSection');
+                const list = document.getElementById('featuredRequestsList');
+
+                if (!requests || requests.length === 0) {
+                    section.style.display = 'none';
+                    return;
+                }
+
+                section.style.display = 'block';
+                list.innerHTML = requests.map(req => {
+                    const statusText = req.status === 'pending' ? 'قيد المراجعة' : req.status === 'approved' ? 'تمت الموافقة' : 'مرفوض';
+                    const adTitle = req.ads ? req.ads.title : 'إعلان';
+                    return `
+                        <div class="featured-request-card ${req.status}">
+                            <div style="flex:1">
+                                <div style="font-weight:700; margin-bottom:4px">${adTitle}</div>
+                                <div style="font-size:13px; color:#64748b">
+                                    ${req.payment_method === 'instapay' ? 'إنستاباي' : 'فودافون كاش'} • 
+                                    المرجع: ${req.transaction_ref} •
+                                    ${new Date(req.created_at).toLocaleDateString('ar-EG')}
+                                </div>
+                                ${req.rejection_reason ? `<div style="font-size:13px; color:#DC2626; margin-top:4px">سبب الرفض: ${req.rejection_reason}</div>` : ''}
+                            </div>
+                            <span class="request-status-badge ${req.status}">${statusText}</span>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading featured requests:', error);
+            }
+        }
+
+        function getAdStatus(ad) {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const expiresAt = new Date(ad.expires_at);
+            expiresAt.setHours(0,0,0,0);
+            const daysLeft = Math.ceil((expiresAt - today) / (1000 * 60 * 60 * 24));
+
+            if (ad.status === 'pending') return { status: 'pending', label: '⏳ في انتظار الموافقة', daysLeft };
+            if (ad.status === 'rejected') return { status: 'rejected', label: '❌ مرفوض', daysLeft };
+            if (ad.status === 'featured') return { status: 'featured', label: '⭐ مميز', daysLeft };
+            if (daysLeft < 0) return { status: 'expired', label: 'منتهي', daysLeft };
+            if (daysLeft <= APP_CONFIG.expiringAlertDays) return { status: 'expiring', label: `ينتهي خلال ${daysLeft} يوم`, daysLeft };
+            return { status: 'active', label: 'نشط', daysLeft };
+        }
+
+        function renderMyAds() {
+            const container = document.getElementById('myAdsContainer');
+            let filteredAds = userAds;
+
+            if (currentFilter === 'pending') filteredAds = userAds.filter(ad => ad.status === 'pending');
+            else if (currentFilter === 'active') filteredAds = userAds.filter(ad => getAdStatus(ad).status === 'active');
+            else if (currentFilter === 'featured') filteredAds = userAds.filter(ad => ad.status === 'featured');
+            else if (currentFilter === 'expiring') filteredAds = userAds.filter(ad => getAdStatus(ad).status === 'expiring');
+
+            if (filteredAds.length === 0) {
+                container.innerHTML = `
+                    <div class="dashboard-empty">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                        <h3>لا توجد إعلانات</h3>
+                        <p>لم تقم بنشر أي إعلان بعد. ابدأ الآن!</p>
+                        <a href="add-ad.html" class="btn btn-primary">إضافة إعلان جديد</a>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = `<div class="my-ads-grid">${filteredAds.map(ad => createMyAdCard(ad)).join('')}</div>`;
+        }
+
+        function createMyAdCard(ad) {
+            const status = getAdStatus(ad);
+            const placeholder = ad.images && ad.images.length > 0
+                ? `<img src="${ad.images[0]}" alt="${ad.title}">`
+                : `<div class="placeholder"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>`;
+
+            const canFeature = ad.status === 'active';
+            const featureBtn = canFeature ? `
+                <button class="btn btn-sm btn-feature" onclick="openFeaturedModal('${ad.id}')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    مميز
+                </button>` : '';
+
+            return `
+                <div class="my-ad-card ${ad.status === 'featured' ? 'featured-card' : ''}" data-id="${ad.id}">
+                    <div class="my-ad-card-image">
+                        ${placeholder}
+                        <span class="my-ad-status ${status.status}">${status.label}</span>
+                    </div>
+                    <div class="my-ad-card-content">
+                        <h3 class="my-ad-card-title">${ad.title}</h3>
+                        <p class="my-ad-card-price">${App.formatPrice(ad.price)}</p>
+                        <div class="my-ad-card-meta">
+                            <span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                ${ad.views || 0} مشاهدة
+                            </span>
+                            <span title="تاريخ النشر">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                نشر: ${App.formatDate(ad.created_at)}
+                            </span>
+                            <span title="تاريخ الانتهاء" style="color: ${new Date(ad.expires_at) < new Date() ? '#EF4444' : new Date(ad.expires_at) < new Date(Date.now() + 3*24*60*60*1000) ? '#F59E0B' : '#64748b'}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                ينتهي: ${App.formatDate(ad.expires_at)}
+                            </span>
+                        </div>
+                        <div class="my-ad-card-actions">
+                            <a href="ad-detail.html?id=${ad.id}" class="btn btn-secondary btn-sm">عرض</a>
+                            ${featureBtn}
+                            <button class="btn btn-sm btn-delete" onclick="confirmDeleteAd('${ad.id}', '${ad.title.replace(/'/g,"\\'")}')">حذف</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function confirmDeleteAd(adId, adTitle) {
+            App.showModal('حذف الإعلان', `
+                <div class="confirm-modal">
+                    <div class="confirm-modal-icon delete">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </div>
+                    <h3>هل أنت متأكد من حذف هذا الإعلان؟</h3>
+                    <p>"${adTitle}"<br>لا يمكن التراجع عن هذا الإجراء.</p>
+                    <div class="confirm-modal-actions">
+                        <button class="btn btn-secondary" onclick="App.closeModal()">إلغاء</button>
+                        <button class="btn btn-delete" onclick="doDeleteAd('${adId}')">نعم، احذف</button>
+                    </div>
+                </div>`);
+        }
+
+        async function doDeleteAd(adId) {
+            try {
+                App.closeModal();
+                App.showToast('جاري حذف الإعلان...', 'info');
+                await Auth.deleteAd(adId);
+                App.showToast('تم حذف الإعلان بنجاح', 'success');
+                await loadDashboardData();
+            } catch (error) {
+                App.showToast('حدث خطأ أثناء حذف الإعلان', 'error');
+            }
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    renderMyAds();
+                });
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                App.showModal('تسجيل الخروج', `
+                    <div class="confirm-modal">
+                        <h3>هل أنت متأكد من تسجيل الخروج؟</h3>
+                        <p>ستحتاج لتسجيل الدخول مرة أخرى للوصول إلى إعلاناتك.</p>
+                        <div class="confirm-modal-actions">
+                            <button class="btn btn-secondary" onclick="App.closeModal()">إلغاء</button>
+                            <button class="btn btn-primary" onclick="Auth.logout()">تسجيل الخروج</button>
+                        </div>
+                    </div>`);
+            });
+        }
+    </script>
+</body>
+</html>
