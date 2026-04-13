@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تسجيل دخول الأدمن - OB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .admin-login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px;
+        }
+        .admin-login-container {
+            background: white;
+            border-radius: 16px;
+            padding: 48px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        .admin-login-logo { text-align: center; margin-bottom: 32px; }
+        .admin-login-logo svg { width: 64px; height: 64px; margin-bottom: 16px; }
+        .admin-login-logo h1 { font-size: 28px; font-weight: 800; color: #1a1a2e; margin: 0; }
+        .admin-login-logo p { color: #6b7280; margin: 8px 0 0 0; }
+        .admin-form-group { margin-bottom: 20px; }
+        .admin-form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #374151; }
+        .admin-form-input {
+            width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb;
+            border-radius: 10px; font-size: 16px; font-family: inherit; transition: all 0.3s ease;
+        }
+        .admin-form-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .admin-login-btn {
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white; border: none; border-radius: 10px;
+            font-size: 16px; font-weight: 700; font-family: inherit;
+            cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .admin-login-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 20px -10px rgba(37,99,235,0.5); }
+        .admin-login-btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+        .admin-back-link {
+            display: block; text-align: center; margin-top: 24px;
+            color: #6b7280; text-decoration: none; font-size: 14px;
+        }
+        .admin-back-link:hover { color: #2563eb; }
+        .admin-error {
+            background: #fef2f2; color: #dc2626; padding: 12px 16px;
+            border-radius: 8px; margin-bottom: 20px; text-align: center; display: none;
+        }
+        .admin-error.show { display: block; }
+        .spin {
+            width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white; border-radius: 50%;
+            animation: spin 0.7s linear infinite; display: none;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="admin-login-page">
+        <div class="admin-login-container">
+            <div class="admin-login-logo">
+                <svg width="64" height="64" viewBox="0 0 40 40" fill="none">
+                    <rect width="40" height="40" rx="10" fill="#2563EB"/>
+                    <path d="M12 20L18 14L24 20L18 26L12 20Z" fill="white"/>
+                    <path d="M20 14L26 20L20 26L14 20L20 14Z" fill="white" fill-opacity="0.7"/>
+                </svg>
+                <h1>OB Admin</h1>
+                <p>لوحة تحكم لأصحاب الموقع</p>
+            </div>
+
+            <div class="admin-error" id="adminError"></div>
+
+            <form id="adminLoginForm">
+                <div class="admin-form-group">
+                    <label for="adminEmail">البريد الإلكتروني</label>
+                    <input type="email" id="adminEmail" class="admin-form-input"
+                           placeholder="admin@example.com" required autocomplete="email">
+                </div>
+                <div class="admin-form-group">
+                    <label for="adminPassword">كلمة المرور</label>
+                    <input type="password" id="adminPassword" class="admin-form-input"
+                           placeholder="••••••••" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="admin-login-btn" id="loginBtn">
+                    <span class="spin" id="loginSpinner"></span>
+                    <span id="loginBtnText">تسجيل الدخول</span>
+                </button>
+            </form>
+
+            <a href="../index.html" class="admin-back-link">← العودة للموقع</a>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="../js/config.js"></script>
+    <script>
+        const _supaClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const loginForm  = document.getElementById('adminLoginForm');
+        const loginBtn   = document.getElementById('loginBtn');
+        const loginText  = document.getElementById('loginBtnText');
+        const loginSpinEl= document.getElementById('loginSpinner');
+        const errorEl    = document.getElementById('adminError');
+
+        function showError(msg) {
+            errorEl.textContent = msg;
+            errorEl.classList.add('show');
+            setTimeout(() => errorEl.classList.remove('show'), 4000);
+        }
+
+        function setLoading(on) {
+            loginBtn.disabled = on;
+            loginSpinEl.style.display = on ? 'block' : 'none';
+            loginText.textContent = on ? 'جاري التحقق...' : 'تسجيل الدخول';
+        }
+
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email    = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value;
+
+            setLoading(true);
+
+            try {
+                // 1. Sign in with Supabase
+                const { data: authData, error: authError } = await _supaClient.auth.signInWithPassword({ email, password });
+
+                if (authError) {
+                    showError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+                    setLoading(false);
+                    return;
+                }
+
+                const session = authData.session;
+                const userId  = authData.user.id;
+
+                // 2. Check admins table using the user's own token
+                const { data: adminRow, error: adminError } = await _supaClient
+                    .from('admins')
+                    .select('id')
+                    .eq('id', userId)
+                    .maybeSingle();
+
+                if (adminError || !adminRow) {
+                    // Not an admin — sign out immediately
+                    await _supaClient.auth.signOut();
+                    showError('هذا الحساب لا يملك صلاحيات الأدمن');
+                    setLoading(false);
+                    return;
+                }
+
+                // 3. Store encrypted session token (never plain password)
+                sessionStorage.setItem('ob_admin_token', session.access_token);
+                sessionStorage.setItem('ob_admin_refresh', session.refresh_token);
+                sessionStorage.setItem('ob_admin_email', email);
+
+                window.location.href = 'dashboard.html';
+
+            } catch (err) {
+                console.error('Admin login error:', err);
+                showError('حدث خطأ، يرجى المحاولة مرة أخرى');
+                setLoading(false);
+            }
+        });
+    </script>
+</body>
+</html>
