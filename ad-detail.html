@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تفاصيل الإعلان - سوق العبور</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+
+<style>
+/* ── Lightbox ── */
+.lightbox-overlay { position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.95); z-index:9999; display:none; flex-direction:column; align-items:center; justify-content:center; }
+.lightbox-overlay.show { display:flex; }
+.lightbox-img-wrap { position:relative; max-width:100vw; max-height:85vh; display:flex; align-items:center; justify-content:center; }
+.lightbox-overlay img { max-width:96vw; max-height:82vh; object-fit:contain; border-radius:10px; display:block; touch-action:pinch-zoom; }
+.lightbox-close { position:fixed; top:16px; left:16px; width:44px;height:44px; background:rgba(255,255,255,0.15); border:none; border-radius:50%; color:white; font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); z-index:10; }
+.lightbox-nav { position:fixed; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.12); border:none; color:white; font-size:32px; padding:12px 18px; cursor:pointer; border-radius:10px; backdrop-filter:blur(4px); z-index:10; }
+.lightbox-nav.prev { right:8px; }
+.lightbox-nav.next { left:8px; }
+.lightbox-counter { color:rgba(255,255,255,0.7); font-size:14px; margin-top:14px; }
+.lightbox-thumbs { display:flex; gap:8px; margin-top:12px; overflow-x:auto; padding:4px 12px; max-width:100vw; }
+.lightbox-thumbs img { width:54px; height:54px; object-fit:cover; border-radius:8px; cursor:pointer; opacity:0.55; border:2px solid transparent; flex-shrink:0; }
+.lightbox-thumbs img.active { opacity:1; border-color:white; }
+
+/* ── Main image clickable ── */
+.main-image img { cursor:zoom-in !important; }
+.gallery-thumb { cursor:zoom-in !important; }
+
+/* ── Mobile ad-detail ── */
+@media (max-width:768px) {
+    .ad-detail-layout { grid-template-columns:1fr !important; }
+    .ad-detail-images { border-radius:14px; overflow:hidden; }
+    .main-image { height:260px !important; border-radius:14px; overflow:hidden; }
+    .main-image img { width:100%; height:100%; object-fit:cover; }
+    .image-gallery { display:flex; gap:8px; padding:8px; overflow-x:auto; }
+    .image-gallery button { width:68px; height:68px; flex-shrink:0; border-radius:10px; overflow:hidden; border:2px solid transparent; padding:0; background:none; }
+    .image-gallery button.active { border-color:#2563eb; }
+    .image-gallery button img { width:100%; height:100%; object-fit:cover; }
+    .ad-detail-info { padding:16px; }
+    .ad-price { font-size:26px !important; }
+    .ad-actions { flex-direction:column; gap:10px; }
+    .ad-actions a, .ad-actions button { width:100%; justify-content:center; font-size:16px; padding:14px; }
+    .btn-whatsapp { font-size:17px !important; padding:15px !important; }
+    .ad-seller-card { padding:14px; border-radius:14px; }
+    .ad-meta-grid { grid-template-columns:1fr 1fr !important; }
+}
+</style>
+</head>
+<body class="has-bottom-nav">
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                        <rect width="40" height="40" rx="10" fill="#2563EB"/>
+                        <path d="M12 20L18 14L24 20L18 26L12 20Z" fill="white"/>
+                        <path d="M20 14L26 20L20 26L14 20L20 14Z" fill="white" fill-opacity="0.7"/>
+                    </svg>
+                    <span>سوق العبور</span>
+                </a>
+                <nav class="nav" id="nav">
+                    <a href="index.html" class="nav-link">الرئيسية</a>
+                    <a href="ads.html" class="nav-link">الإعلانات</a>
+                </nav>
+                <div class="header-actions">
+                    <a href="add-ad.html" class="btn btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span>أضف إعلان</span>
+                    </a>
+                    <button class="menu-toggle" id="menuToggle" aria-label="القائمة">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Ad Detail Page -->
+    <main class="ad-detail-page">
+        <div class="container">
+            <div class="ad-detail" id="adDetail">
+                <!-- Loading State -->
+                <div class="loading-spinner" style="padding: 80px 0;">
+                    <div class="spinner"></div>
+                    <p>جاري تحميل تفاصيل الإعلان...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="index.html" class="logo">
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                            <rect width="40" height="40" rx="10" fill="#2563EB"/>
+                            <path d="M12 20L18 14L24 20L18 26L12 20Z" fill="white"/>
+                            <path d="M20 14L26 20L20 26L14 20L20 14Z" fill="white" fill-opacity="0.7"/>
+                        </svg>
+                        <span>سوق العبور</span>
+                    </a>
+                    <p>منصة شراء وبيع محلية لأهالي مدينة العبور</p>
+                </div>
+                <div class="footer-links">
+                    <h3>روابط سريعة</h3>
+                    <a href="index.html">الرئيسية</a>
+                    <a href="ads.html">الإعلانات</a>
+                    <a href="add-ad.html">أضف إعلانك</a>
+                </div>
+                <div class="footer-contact">
+                    <h3>تواصل معنا</h3>
+                    <p>للإعلان أو الاستفسارات</p>
+                    <a href="https://wa.me/201000000000" target="_blank" class="whatsapp-link">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                        </svg>
+                        <span>واتساب</span>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 سوق العبور. جميع الحقوق محفوظة.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Ad Detail Page Logic
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize mobile menu
+            const menuToggle = document.getElementById('menuToggle');
+            const nav = document.getElementById('nav');
+            if (menuToggle && nav) {
+                menuToggle.addEventListener('click', () => {
+                    nav.classList.toggle('show');
+                });
+            }
+
+            // Get ad ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const adId = urlParams.get('id');
+
+            if (!adId) {
+                document.getElementById('adDetail').innerHTML = `
+                    <div class="empty-state" style="padding: 80px 0;">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <h3>الإعلان غير موجود</h3>
+                        <p>عذراً، لم يتم العثور على هذا الإعلان</p>
+                        <a href="ads.html" class="btn btn-primary" style="margin-top: 16px;">العودة للإعلانات</a>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                // Fetch ad details
+                const ad = await supabaseDB.getAdById(adId);
+
+                if (!ad) {
+                    document.getElementById('adDetail').innerHTML = `
+                        <div class="empty-state" style="padding: 80px 0;">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <h3>الإعلان غير موجود</h3>
+                            <p>عذراً، قد يكون هذا الإعلان قد انتهت صلاحيته أو تم حذفه</p>
+                            <a href="ads.html" class="btn btn-primary" style="margin-top: 16px;">العودة للإعلانات</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Increment views
+                supabaseDB.incrementViews(adId, ad.views || 0);
+
+                // Get category name
+                const categoryNames = {
+                    'mobiles': 'موبايلات',
+                    'cars': 'سيارات',
+                    'real-estate': 'عقارات',
+                    'electronics': 'أجهزة',
+                    'services': 'خدمات'
+                };
+
+                // Check if expiring soon
+                const daysLeft = App.getDaysUntilExpiry(ad.expires_at);
+                const isExpiringSoon = App.isExpiringSoon(ad.expires_at);
+
+                // Render images
+                let mainImage = '';
+                let galleryImages = '';
+
+                if (ad.images && ad.images.length > 0) {
+                    // Store images globally so inline onclick can access them safely
+                    window._adImages = ad.images;
+
+                    mainImage = `<img src="${ad.images[0]}" alt="${ad.title}" onclick="openLightbox(window._adImages,0)" style="cursor:zoom-in;">`;
+
+                    ad.images.forEach((img, idx) => {
+                        const activeClass = idx === 0 ? 'active' : '';
+                        galleryImages += `<button class="${activeClass}" onclick="changeMainImage('${img}',${idx},this)">
+                                <img src="${img}" alt="صورة ${idx + 1}">
+                            </button>
+                        `;
+                    });
+                } else {
+                    mainImage = `
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-secondary);">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                        </div>
+                    `;
+                }
+
+                // Render ad detail
+                document.getElementById('adDetail').innerHTML = `
+                    <div class="ad-detail-header">
+                        <a href="ads.html" class="back-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="9" y1="18" x2="15" y2="12"></line>
+                                <line x1="15" y1="18" x2="9" y2="12"></line>
+                            </svg>
+                            <span>العودة للإعلانات</span>
+                        </a>
+
+                        ${isExpiringSoon ? `
+                            <div class="expiring-alert">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                <p>ينتهي هذا الإعلان خلال ${daysLeft} يوم${daysLeft === 1 ? '' : daysLeft === 2 ? '' : ''}</p>
+                            </div>
+                        ` : ''}
+
+                        <div class="ad-detail-grid">
+                            <div class="ad-detail-images">
+                                <div class="main-image" id="mainImage">
+                                    ${mainImage}
+                                </div>
+                                ${galleryImages ? `<div class="image-gallery">${galleryImages}</div>` : ''}
+                            </div>
+
+                            <div class="ad-detail-info">
+                                <div>
+                                    <span class="ad-card-badge" style="display: inline-block; margin-bottom: 8px;">
+                                        ${categoryNames[ad.category] || ad.category}
+                                    </span>
+                                    <h1 class="ad-detail-title">${ad.title}</h1>
+                                </div>
+
+                                <p class="ad-detail-price">${App.formatPrice(ad.price)}</p>
+
+                                <div class="ad-detail-meta">
+                                    <span>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                            <circle cx="12" cy="10" r="3"></circle>
+                                        </svg>
+                                        ${ad.neighborhood || 'العبور'}
+                                    </span>
+                                    <span>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                                        </svg>
+                                        ${App.formatDate(ad.created_at)}
+                                    </span>
+                                    <span>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                        ${(ad.views || 0) + 1} مشاهدة
+                                    </span>
+                                </div>
+
+                                <div class="ad-detail-description">
+                                    <h3>الوصف</h3>
+                                    <p>${ad.description}</p>
+                                </div>
+
+                                <div class="ad-detail-contact">
+                                    <a href="${App.getWhatsAppLink(ad.whatsapp, `مرحباً، أريد الاستفسار عن: ${ad.title}`)}"
+                                       target="_blank"
+                                       class="btn btn-whatsapp">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                                        </svg>
+                                        <span>تواصل عبر واتساب</span>
+                                    </a>
+                                    <a href="tel:${ad.whatsapp}" class="btn btn-secondary">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                        </svg>
+                                        <span>اتصل</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Update page title
+                document.title = `${ad.title} - سوق العبور`;
+
+            } catch (error) {
+                console.error('Error loading ad:', error);
+                document.getElementById('adDetail').innerHTML = `
+                    <div class="empty-state" style="padding: 80px 0;">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <h3>حدث خطأ</h3>
+                        <p>عذراً، حدث خطأ في تحميل تفاصيل الإعلان</p>
+                        <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 16px;">إعادة المحاولة</button>
+                    </div>
+                `;
+            }
+        });
+
+        // Change main image function — keeps lightbox onclick
+        function changeMainImage(src, idx, btn) {
+            const mainImage = document.getElementById('mainImage');
+            mainImage.innerHTML = `<img src="${src}" alt="صورة" onclick="openLightbox(window._adImages,${idx})" style="cursor:zoom-in;">`;
+
+            document.querySelectorAll('.image-gallery button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+    </script>
+
+<!-- Lightbox -->
+<div class="lightbox-overlay" id="adLightbox" onclick="lbClose(event)">
+    <button class="lightbox-close" onclick="closeLightbox()">×</button>
+    <div class="lightbox-img-wrap">
+        <img id="lbImg" src="" alt="">
+    </div>
+    <div class="lightbox-counter" id="lbCounter"></div>
+    <div class="lightbox-thumbs" id="lbThumbs"></div>
+    <button class="lightbox-nav prev" onclick="lbNav(-1);event.stopPropagation()">›</button>
+    <button class="lightbox-nav next" onclick="lbNav(1);event.stopPropagation()">‹</button>
+</div>
+
+<script>
+// ── Lightbox ──
+var _lb = { imgs:[], i:0 };
+function openLightbox(imgs, idx) {
+    if (!imgs || !imgs.length) return;
+    _lb.imgs = imgs; _lb.i = idx || 0;
+    lbRender();
+    document.getElementById('adLightbox').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+    document.getElementById('adLightbox').classList.remove('show');
+    document.body.style.overflow = '';
+}
+function lbClose(e) { if (e.target === document.getElementById('adLightbox')) closeLightbox(); }
+function lbNav(dir) {
+    _lb.i = (_lb.i + dir + _lb.imgs.length) % _lb.imgs.length;
+    lbRender();
+}
+function lbRender() {
+    document.getElementById('lbImg').src = _lb.imgs[_lb.i];
+    document.getElementById('lbCounter').textContent = _lb.imgs.length > 1 ? (_lb.i+1)+' / '+_lb.imgs.length : '';
+    const thumbsEl = document.getElementById('lbThumbs');
+    if (_lb.imgs.length > 1) {
+        thumbsEl.innerHTML = _lb.imgs.map((src,i) =>
+            '<img src="'+src+'" class="'+(i===_lb.i?'active':'')+'" onclick="lbGoto('+i+')" />'
+        ).join('');
+    } else { thumbsEl.innerHTML = ''; }
+}
+function lbGoto(i) { _lb.i = i; lbRender(); }
+document.addEventListener('keydown', function(e){
+    var lb = document.getElementById('adLightbox');
+    if (!lb.classList.contains('show')) return;
+    if (e.key==='Escape') closeLightbox();
+    if (e.key==='ArrowRight') lbNav(-1);
+    if (e.key==='ArrowLeft') lbNav(1);
+});
+
+// Swipe support
+var _ts = 0;
+document.getElementById('adLightbox').addEventListener('touchstart', function(e){ _ts = e.touches[0].clientX; });
+document.getElementById('adLightbox').addEventListener('touchend', function(e){
+    var dx = _ts - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 50) lbNav(dx > 0 ? 1 : -1);
+});
+</script>
+
+<!-- Mobile Bottom Navigation -->
+<nav class="app-bottom-nav">
+    <div class="app-bottom-nav-inner">
+        <a href="index.html" class="app-nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            الرئيسية
+        </a>
+        <a href="ads.html" class="app-nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            إعلانات
+        </a>
+        <a href="add-ad.html" class="app-nav-fab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </a>
+        <a href="dashboard.html" class="app-nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            حسابي
+        </a>
+        <a href="login.html" class="app-nav-item" id="loginNavBtn" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+            دخول
+        </a>
+    </div>
+</nav>
+</body>
+</html>
